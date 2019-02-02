@@ -7,9 +7,17 @@
             <table>
             	<tr>
             		<td>
-            		
+            			<div>Issue Key</div>
+            		</td>
             		<td>
-            	
+            			<div>Issue Type</div>
+            		</td>
+            		<td>
+            			<div>Project Name</div>
+            		</td>
+            		<td>
+            			<div>Current User</div>
+            		</td>
             	</tr>
             	<tr>
             		<td>

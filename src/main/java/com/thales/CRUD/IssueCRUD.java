@@ -156,11 +156,11 @@ public class IssueCRUD extends HttpServlet {
 
 		IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
 		issueInputParameters.setSummary(req.getParameter("summary"))
-		.setDescription(req.getParameter("description"))
-		.setAssigneeId(user.getName())
-		.setReporterId(user.getName())
-		.setProjectId(project.getId())
-		.setIssueTypeId(taskIssueType.getId());
+			.setDescription("Jira Prime - " + req.getParameter("description"))
+			.setAssigneeId(user.getName())
+			.setReporterId(user.getName())
+			.setProjectId(project.getId())
+			.setIssueTypeId(taskIssueType.getId());
 
 		IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
 
@@ -172,7 +172,8 @@ public class IssueCRUD extends HttpServlet {
 
 		} else {
 			issueService.create(user, result);
-			resp.sendRedirect("issuePrime");
+			String redirection = "/jira";
+			resp.sendRedirect(redirection);
 		}
 	}
 
