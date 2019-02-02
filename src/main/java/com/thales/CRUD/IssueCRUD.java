@@ -12,7 +12,9 @@ import java.io.IOException;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.bc.project.ProjectService;
+import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.ConstantsManager;
+import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
 import com.atlassian.jira.issue.MutableIssue;
@@ -172,6 +174,7 @@ public class IssueCRUD extends HttpServlet {
 
 		} else {
 			issueService.create(user, result);
+			String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
 			String redirection = "/jira";
 			resp.sendRedirect(redirection);
 		}
