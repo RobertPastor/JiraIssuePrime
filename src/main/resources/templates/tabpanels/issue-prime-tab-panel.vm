@@ -1,10 +1,12 @@
 <div class="mod-header">
 
     <!-- <h3>$i18n.getText('This panel allows you to prime the current issue')</h3> -->
-    
+    <h3>This panel allows you to prime the current issue</h3>
+	<span>Only tasks (for demo purpose) , IRFs or PCRs can be primed.</span>
+	<span>You must have adequate creation permissions in the target project (TUTORIAL, PCR or SCO).</span>
     <div>
             
-            <table>
+            <table border="1px">
             	<tr>
             		<td>
             			<div>Issue Key</div>
@@ -22,11 +24,11 @@
             	<tr>
             		<td>
             			<div readonly> $issue.getKey() </div>
-            			<!-- <input id="issueKey" name="issueKey" value="" readonly> -->
+            			<!--  <input id="issueKey" name="issueKey" value="$issue.getKey()" readonly> -->
             		</td>
             		<td>
             		    <div readonly> $issue.getIssueType().getName() </div>
-            		    <!-- <input id="issueType" name="issueType" value="" readonly> -->
+            		    <!-- input id="issueType" name="issueType" value="" readonly> -->
             		</td>
             		<td>
             			<div readonly> $issue.getProjectObject().getName() </div>
@@ -45,8 +47,43 @@
             <!--This is a comment. Comments are not displayed in the browser -->
             <!-- <input type="submit" class="button" value="Prime this issue"> -->
             
-			<a href="${baseurl}/plugins/servlet/issuePrime" target="_blank">Prime this issue</a>
-
+            <table border="1px">
+            	<tr>
+            		<td>
+            			<div>Prime a Task in a new Task in the project with key TUTORIAL</div>
+            		</td>
+            		<td>
+            			<div>Prime an IRF (issueType=IRF) into a PCR (issueType=PCR)</div>
+            		</td>
+            		<td>
+            			<div>Prime a PCR (issueType=PCR) in a SCO (issueType=SCO)</div>
+            		</td>
+            	</tr>
+            	
+            	<br>
+            	
+            	<tr>
+            		<td>
+            			<div>
+            			 	<!-- add action type as a parameter in the request -->
+							<a href="${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=task&issueKey=$issue.getKey()" target="_blank">Prime this task</a>
+            			</div>
+            		</td>
+            		<td>
+            			<div>
+            			 	<!-- add action type as a parameter in the request -->
+							<a href="${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=IRF&issueKey=$issue.getKey()" target="_blank">Prime this IRF to a PCR</a>
+            			</div>
+            		</td>
+            		<td>
+            		<div>
+            			 	<!-- add action type as a parameter in the request -->
+							<a href="${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=SCO&issueKey=$issue.getKey()" target="_blank">Prime this PCR to a SCO</a>
+            			</div>
+            		</td>
+            	</tr>
+            </table>
+           
     </div>
     
 </div>

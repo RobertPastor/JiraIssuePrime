@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import com.atlassian.jira.bc.issue.IssueService;
+import com.atlassian.jira.bc.issue.IssueService.IssueResult;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.component.ComponentAccessor;
@@ -79,34 +80,74 @@ public class IssueCRUD extends HttpServlet {
 	}
 
 
+
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
 		String action = Optional.ofNullable(req.getParameter("actionType")).orElse("");
-
+		String issueType = Optional.ofNullable(req.getParameter("issueType")).orElse("");
+		String issueKey = Optional.ofNullable(req.getParameter("issueKey")).orElse("");
+		
 		Map<String, Object> context = new HashMap<>();
-		resp.setContentType("text/html;charset=utf-8");
-		switch (action) {
-		case "new":
+		
+		ApplicationUser user = authenticationContext.getLoggedInUser();
+		IssueResult issueResult = issueService.getIssue(user, issueKey);
+		if (issueResult.getErrorCollection().hasAnyErrors()) {
+			
+			context.put("errors", issueResult.getErrorCollection().getErrors());
+			resp.setContentType("text/html;charset=utf-8");
+			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
 
-			templateRenderer.render(NEW_ISSUE_TEMPLATE, context, resp.getWriter());
-			break;
+			
+		} else {
+			
+			MutableIssue issue = issueResult.getIssue();
+			if (issue == null) {
+				
+				context.put("errors", Collections.singletonList("Error - cannot find issue with key= " + issueKey));
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				return;
+				
+			} else {
+				
+				// send parameters to the velocity template
+				context.put("action", action);
+				context.put("issueType", issueType);
+				context.put("issueKey", issueKey);
+				
+				// pre defined summary and description
+				context.put("summary", issue.getSummary());
+				context.put("description", issue.getDescription());
+				
+				resp.setContentType("text/html;charset=utf-8");
+				
+				switch (action) {
+				case "new":
 
-		default:
+					templateRenderer.render(NEW_ISSUE_TEMPLATE, context, resp.getWriter());
+					break;
 
-			templateRenderer.render(NEW_ISSUE_TEMPLATE, context, resp.getWriter());
-			break;
-			//log.error("Only new action type is implemented!!!");
-			//resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+				default:
+
+					//log.error("Error - Only new action type is implemented!!!");
+					//resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+					
+					context.put("errors", Collections.singletonList("Error - Only new action type is implemented!!!"));
+					templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+					return;
+				}	
+			}
+			
 		}
-
+		
 	}
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		
+
 		//String actionType = req.getParameter("actionType"); 
 		String actionType = Optional.ofNullable(req.getParameter("actionType")).orElse("");
+		String issueType = Optional.ofNullable(req.getParameter("issueType")).orElse("");
 
 		switch (actionType) {
 
@@ -117,17 +158,24 @@ public class IssueCRUD extends HttpServlet {
 		default:
 			handleIssueCreation(req, resp);
 			break;
-			
-			
+
 			//log.error("Only new action type is implemented!!!");
 			//resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+			//context.put("errors", Collections.singletonList("Project with key " + "TUTORIAL" + " doesn't exist"));
+			//templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+			//return;
 		}
 	}
 
 
-
+	/**
+	 * Create an issue
+	 * @param req
+	 * @param resp
+	 * @throws IOException
+	 */
 	private void handleIssueCreation(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		
+
 		ApplicationUser user = authenticationContext.getLoggedInUser();
 
 		Map<String, Object> context = new HashMap<>();
@@ -145,11 +193,11 @@ public class IssueCRUD extends HttpServlet {
 				issueType -> issueType.getName().equalsIgnoreCase("tâche")).findFirst().orElse(null);
 
 		if (taskIssueType == null) {
-			
+
 			taskIssueType = constantsManager.getAllIssueTypeObjects().stream().filter(
 					issueType -> issueType.getName().equalsIgnoreCase("task")).findFirst().orElse(null);
 		}
-		
+
 		if(taskIssueType == null) {
 			context.put("errors", Collections.singletonList("Can't find Task issue type or Tâche issue type -> will try to create only these issue types"));
 			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
@@ -158,7 +206,7 @@ public class IssueCRUD extends HttpServlet {
 
 		IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
 		issueInputParameters.setSummary(req.getParameter("summary"))
-			.setDescription("Jira Prime - " + req.getParameter("description"))
+			.setDescription("Coflight-Prime - " + req.getParameter("description"))
 			.setAssigneeId(user.getName())
 			.setReporterId(user.getName())
 			.setProjectId(project.getId())
@@ -173,22 +221,15 @@ public class IssueCRUD extends HttpServlet {
 			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
 
 		} else {
-			issueService.create(user, result);
+			
+			IssueResult issueResult = issueService.create(user, result);
+			MutableIssue issue = issueResult.getIssue();
+			
 			String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
-			String redirection = "/jira";
+			String redirection = "/jira/browse/" + issue.getProjectObject().getKey();
 			resp.sendRedirect(redirection);
 		}
 	}
 
-	/*
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-    {
-        resp.setContentType("text/html");
-        resp.getWriter().write("<html><body>Hello World</body></html>");
-
-
-    }
-	 */
 
 }

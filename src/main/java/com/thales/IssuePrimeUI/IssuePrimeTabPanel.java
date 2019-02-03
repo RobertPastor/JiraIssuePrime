@@ -29,12 +29,11 @@ public class IssuePrimeTabPanel extends AbstractIssueTabPanel3
 		
 		log.info(" get Actions ");
 		List<IssueAction> list = new ArrayList<IssueAction>();
+		
 		//list.add(new GenericMessageAction("Purpose"));
-		list.add(new GenericMessageAction(
-                this.descriptor.getI18nBean().getText("This feature allows to prime the current issue.")));
+		//list.add(new GenericMessageAction(this.descriptor.getI18nBean().getText("This feature allows to prime the current issue.")));
 		
 		list.add(new IssuePrimeAction(descriptor, getActionsRequest.issue(), getActionsRequest.loggedInUser() ));
-
 		
         return list;
     }
