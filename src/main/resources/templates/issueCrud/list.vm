@@ -2,10 +2,10 @@
 <head>
 	<link rel="stylesheet" type="text/css" href="css/myPlugin.css"  />
 
-    <title>Jira Issue Prime Status Errors</title>
+    <title>Jira Issue Prime Status </title>
     <!--  <meta name="decorator" content="atl.general"> -->
     <script>
-        AJS.$(document).ready(function() {
+        (document).ready(function() {
         	
         	console.log("Velocity file list.vm is loaded");
             

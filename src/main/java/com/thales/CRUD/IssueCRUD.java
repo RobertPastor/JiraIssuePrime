@@ -240,6 +240,7 @@ public class IssueCRUD extends HttpServlet {
 			context.put("errors", result.getErrorCollection().getErrors());
 			resp.setContentType("text/html;charset=utf-8");
 			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+			return;
 
 		} else {
 
@@ -248,7 +249,11 @@ public class IssueCRUD extends HttpServlet {
 
 			String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
 			String redirection = "/jira/browse/" + issue.getProjectObject().getKey();
-			resp.sendRedirect(redirection);
+			//resp.sendRedirect(redirection);
+			
+			context.put("errors", Collections.singletonList("Issue " + issue.getKey() + " correctly created"));
+			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+			return;
 		}
 	}
 

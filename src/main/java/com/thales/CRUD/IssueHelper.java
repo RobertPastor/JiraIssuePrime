@@ -38,11 +38,11 @@ public class IssueHelper {
 		
 		List<Field> requiredCreateFields = new ArrayList<Field>();
 		
-		FieldScreenRenderer fsr = FieldScreenRendererFactory.getFieldScreenRenderer( issue );
+		//FieldScreenRenderer fsr = FieldScreenRendererFactory.getFieldScreenRenderer( issue );
 		
-		for (FieldScreenRenderLayoutItem fsrla : fsr.getRequiredFieldScreenRenderItems()) {
-			requiredCreateFields.add(fsrla.getFieldScreenLayoutItem().getOrderableField());
-		}
+		//for (FieldScreenRenderLayoutItem fsrla : fsr.getRequiredFieldScreenRenderItems()) {
+		//	requiredCreateFields.add(fsrla.getFieldScreenLayoutItem().getOrderableField());
+		//}
 		return requiredCreateFields;
 	}
 	
