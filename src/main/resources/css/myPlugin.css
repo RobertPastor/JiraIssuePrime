@@ -1,12 +1,17 @@
 table {
- border-width:1px; 
- border-style:solid; 
- border-color:black;
- width:50%;
+	 border-width:1px; 
+	 border-style:solid; 
+	 border-color:black;
+	 width:50%;
  }
+ 
+ th {
+ 	background-color: yellow;
+ }
+ 
 td { 
- border-width:1px;
- border-style:solid; 
- border-color:red;
- width:50%;
+	 border-width:1px;
+	 border-style:solid; 
+	 border-color:red;
+	 width:50%;
  }

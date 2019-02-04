@@ -1,25 +1,29 @@
+<head>
+	<!--   <link rel="stylesheet" type="text/css" href="css/myPlugin.css"  /> -->
+</head>
+
 <div class="mod-header">
 
     <!-- <h3>$i18n.getText('This panel allows you to prime the current issue')</h3> -->
     <h3>This panel allows you to prime the current issue</h3>
 	<span>Only tasks (for demo purpose) , IRFs or PCRs can be primed.</span>
-	<span>You must have adequate creation permissions in the target project (TUTORIAL, PCR or SCO).</span>
+	<span>The user must have adequate issue creation permissions in the target project (TUTORIAL, PCR or SCO).</span>
     <div>
             
             <table border="1px">
             	<tr>
-            		<td>
+            		<th>
             			<div>Issue Key</div>
-            		</td>
-            		<td>
+            		</th>
+            		<th>
             			<div>Issue Type</div>
-            		</td>
-            		<td>
+            		</th>
+            		<th>
             			<div>Project Name</div>
-            		</td>
-            		<td>
+            		</th>
+            		<th>
             			<div>Current User</div>
-            		</td>
+            		</th>
             	</tr>
             	<tr>
             		<td>
@@ -42,7 +46,8 @@
             
             </table>
                         
-            <input type="hidden" name="new" value="y">
+            <!--  this input has no use as we are not in a html form -->
+            <!-- <input type="hidden" name="new" value="y"> -->
             
             <!--This is a comment. Comments are not displayed in the browser -->
             <!-- <input type="submit" class="button" value="Prime this issue"> -->

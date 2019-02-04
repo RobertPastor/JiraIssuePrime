@@ -1,4 +1,4 @@
-package ut.com.thales.CRUD;
+package it.com.thales.CRUD;
 
 import org.junit.Test;
 import org.junit.After;

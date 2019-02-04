@@ -1,4 +1,4 @@
-package ut.com.atlassian.tutorial.myPlugin;
+package it.com.atlassian.tutorial.myPlugin;
 
 import org.junit.Test;
 import com.atlassian.tutorial.myPlugin.api.MyPluginComponent;

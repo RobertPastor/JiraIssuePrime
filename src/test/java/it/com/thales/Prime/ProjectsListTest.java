@@ -1,4 +1,4 @@
-package ut.com.thales.Prime;
+package it.com.thales.Prime;
 
 import org.junit.Test;
 import org.junit.After;

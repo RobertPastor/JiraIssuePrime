@@ -34,7 +34,9 @@
   <web-resource key="myPlugin-resources" name="myPlugin Web Resources">
     <dependency>com.atlassian.auiplugin:ajs</dependency>
     <resource type="download" name="myPlugin.css" location="css/myPlugin.css"/>
-    <resource type="download" name="myPlugin.js" location="/js/myPlugin.js"/>
+    <resource type="download" name="myPlugin.js" location="js/myPlugin.js"/>
+          <property key="content-type" value="text/javascript"/>
+    
     <resource type="download" name="images/" location="/images"/>
     <context>myPlugin</context>
   </web-resource>

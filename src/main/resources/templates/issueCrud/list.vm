@@ -1,48 +1,39 @@
 <html>
 <head>
-    <title>All Tutorial Issues — Issue CRUD Tutorial</title>
-    <meta name="decorator" content="atl.general">
+	<link rel="stylesheet" type="text/css" href="css/myPlugin.css"  />
+
+    <title>Jira Issue Prime Status Errors</title>
+    <!--  <meta name="decorator" content="atl.general"> -->
     <script>
         AJS.$(document).ready(function() {
-            jQuery('.delete-issue').click(function() {
-                console.log('deleting');
-                var self = jQuery(this);
-                jQuery.ajax({
-                    type: "delete",
-                    url: "issuecrud?key=" + self.data("key"),
-                    success: function(data) {
-                        console.log('dom', self, data);
-                        self.parent().parent().remove();
-                    },
-                    error: function() {
-                        console.log('error', arguments);
-                    }
-                });
-                return false;
-            });
+        	
+        	console.log("Velocity file list.vm is loaded");
+            
         });
     </script>
 </head>
 <body class="page-type-admin">
-<div class="content-container">
-
-    <div class="content-body">
-        <h1>You've Got #if($issues.size()==0)<span style="color:red">NO</span>#end Issues!</h1>
-
-        #if ($errors.size()>0)
-            <div class="aui-message error shadowed">
-                #foreach($error in $errors)
-                    <p class="title">
-                        <span class="aui-icon icon-error"></span>
-                        <strong>$error</strong>
-                    </p>
-                #end
-            </div>
-            <!-- .aui-message -->
-        #end
-
-        
-    </div>
-</div>
+	<div class="content-container">
+	
+	    <div class="content-body">
+	    
+	       <!--  <h1>You've Got #if($issues.size()==0)<span style="color:red">NO</span>#end Issues!</h1> -->
+	
+	        #if ($errors.size()>0)
+	            <div class="aui-message error shadowed">
+	            
+	                #foreach($error in $errors)
+	                    <p class="title">
+	                        <span class="aui-icon icon-error"></span>
+	                        <strong>$error</strong>
+	                    </p>
+	                #end
+	            
+	            </div>
+	            <!-- .aui-message -->
+	        #end
+	
+	    </div>
+	</div>
 </body>
 </html>

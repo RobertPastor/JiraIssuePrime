@@ -1,7 +1,20 @@
- <html>
+
+<html>
 <head>
-    <title>Create Issue as defined in Issue CRUD Tutorial</title>
-    <meta name="decorator" content="atl.general">
+	<!--   <link rel="stylesheet" type="text/css" href="css/myPlugin.css"  /> -->
+	<!--  $webResourceManager.requireResource("myPlugin:myPlugin-resources") -->
+	<!--  $webResourceManager.requireResourcesForContext("myPlugin") -->
+
+    <title>Create an Issue </title>
+    
+    <script>
+        AJS.$(document).ready(function() {
+        	
+        	console.log("Velocity file list.vm is loaded");
+            
+        });
+    </script>
+
 </head>
 <body class="page-type-admin">
 <div class="content-container">
@@ -12,6 +25,9 @@
 
             <form method="post" id="h" action="issuePrime" class="aui">
             
+            	<!--  input with pre defined names to be used in the POST servlet -->
+            	<input id="actionTypeId" name="actionType" class="text long-field" type="text" value="$actionType" readonly>
+            	
 	            <label for="issueTypeId"> Issue Type </label>
             	<input id="issueTypeId" name="issueType" class="text long-field" type="text" value="$issueType" readonly>
             	
@@ -24,7 +40,7 @@
                         <span class="aui-icon icon-required"></span>
                         <span class="content">required</span>
                     </label>
-                    <input id="h-fsummary" class="text long-field" type="text" name="summary" value="$summary">
+                    <input id="h-fsummary" class="text long-field" type="text" name="summary" value="$issue.getSummary()">
                 </div>
                 
                 <div class="field-group">
@@ -33,8 +49,36 @@
                         <span class="aui-icon icon-required"></span>
                         <span class="content">required</span>
                     </label>
-                    <textarea id="h-fdescription" name="description"> $description </textarea>
+                    <textarea id="h-fdescription" name="description"> $issue.getDescription() </textarea>
                 </div>
+                
+                <div class="field-group">
+                    <label for="h-priority">
+                        Priority
+                        <span class="aui-icon icon-required"></span>
+                        <span class="content">required</span>
+                    </label>
+                    <textarea id="h-priority" name="priority"> $issue.getPriority().getName() </textarea>
+                </div>
+                
+                <div class="field-group">
+                    <label for="h-assignee">
+                        Assignee
+                        <span class="aui-icon icon-required"></span>
+                        <span class="content">required</span>
+                    </label>
+                    <textarea id="h-assignee" name="assignee"> $issue.getAssigneeId() </textarea>
+                </div>
+                
+                <div class="field-group">
+                    <label for="h-reporter">
+                        Reporter
+                        <span class="aui-icon icon-required"></span>
+                        <span class="content">required</span>
+                    </label>
+                    <textarea id="h-reporter" name="reporter"> $issue.getReporterId() </textarea>
+                </div>
+                
                 
                 <div class="buttons">
                     <input class="button" type="submit" value="Create"> 
