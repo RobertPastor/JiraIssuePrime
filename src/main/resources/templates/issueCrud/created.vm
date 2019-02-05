@@ -1,0 +1,43 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="css/myPlugin.css"  />
+
+    <title>Jira Issue Prime Status </title>
+    <!--  <meta name="decorator" content="atl.general"> -->
+    <script>
+        (document).ready(function() {
+        	
+        	console.log("Velocity file list.vm is loaded");
+            
+        });
+    </script>
+</head>
+<body class="page-type-admin">
+	<div class="content-container">
+	
+	    <div class="content-body">
+	    	
+	        #if ($results.size()>0)
+	            <div class="aui-message error shadowed">
+	            
+	                #foreach($result in $results)
+	                    <p class="title">
+	                        <span class="aui-icon icon-error"></span>
+	                        <strong>$result</strong>
+	                    </p>
+	                #end
+	            
+	            </div>
+	            <!-- .aui-message -->
+	        #end
+	        
+	       		 
+		    <div class="aui-message shadowed">
+					<a href="$href" target="_blank"> $issueKey </a>
+			</div>
+				
+				
+	    </div>
+	</div>
+</body>
+</html>

@@ -56,6 +56,7 @@ public class IssueCRUD extends HttpServlet {
 	//private PageBuilderService pageBuilderService;
 
 	private static final String LIST_ISSUES_TEMPLATE = "/templates/issueCrud/list.vm";
+	private static final String CREATED_ISSUES_TEMPLATE = "/templates/issueCrud/created.vm";
 	private static final String NEW_ISSUE_TEMPLATE = "/templates/issueCrud/new.vm";
 	//private static final String EDIT_ISSUE_TEMPLATE = "/templates/issueCrud/edit.vm";
 
@@ -227,11 +228,11 @@ public class IssueCRUD extends HttpServlet {
 		// need to know all the mandatory fields in the ISSUE creation operations for this issue type in the target project
 		IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
 		issueInputParameters.setSummary(req.getParameter("summary"))
-		.setDescription("Coflight-Prime - " + req.getParameter("description"))
-		.setAssigneeId(user.getName())
-		.setReporterId(user.getName())
-		.setProjectId(project.getId())
-		.setIssueTypeId(taskIssueType.getId());
+			.setDescription("Coflight-Prime - " + req.getParameter("description"))
+			.setAssigneeId(user.getName())
+			.setReporterId(user.getName())
+			.setProjectId(project.getId())
+			.setIssueTypeId(taskIssueType.getId());
 
 		IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
 
@@ -251,8 +252,10 @@ public class IssueCRUD extends HttpServlet {
 			String redirection = "/jira/browse/" + issue.getProjectObject().getKey();
 			//resp.sendRedirect(redirection);
 			
-			context.put("errors", Collections.singletonList("Issue " + issue.getKey() + " correctly created"));
-			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+			context.put("results", Collections.singletonList("Issue " + issue.getKey() + " correctly created"));
+			context.put("issueKey", issue.getKey() );
+			context.put("href", baseURL + "/browse/" + issue.getKey() );
+			templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
 			return;
 		}
 	}
