@@ -29,15 +29,16 @@
       <property key="content-type" value="text/javascript"/>
     </resource>
     <resource type="download" name="images/" location="/images"/>
-    <context>JiraCoflightPrime</context>
+    <context>myPlugin</context>
   </web-resource>
   <web-resource key="myPlugin-resources" name="myPlugin Web Resources">
     <dependency>com.atlassian.auiplugin:ajs</dependency>
     <resource type="download" name="myPlugin.css" location="css/myPlugin.css"/>
     <resource type="download" name="myPlugin.js" location="js/myPlugin.js"/>
-    <property key="content-type" value="text/javascript"/>
+          <property key="content-type" value="text/javascript"/>
+    
     <resource type="download" name="images/" location="/images"/>
-    <context>JiraCoflightPrime</context>
+    <context>myPlugin</context>
   </web-resource>
   <issue-tabpanel key="issue-prime-tab-panel" name="IssuePrimeTabPanelModule" i18n-name-key="issue-prime-tab-panel.name" class="com.thales.IssuePrimeUI.IssuePrimeTabPanel">
     <description key="issue-prime-tab-panel.description">The Issue Prime Tab Panel Plugin</description>
@@ -53,7 +54,4 @@
     <description key="issue-crud.description">The Issue CRUD Plugin</description>
     <url-pattern>/issuePrime</url-pattern>
   </servlet>
-  <rest name="Rest Resource" i18n-name-key="rest-resource.name" key="rest-resource" path="/issuePrime/restResource" version="1.0">
-    <description key="rest-resource.description">The Rest Resource Plugin</description>
-  </rest>
 </atlassian-plugin>

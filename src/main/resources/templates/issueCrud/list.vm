@@ -2,10 +2,10 @@
 <head>
 	<link rel="stylesheet" type="text/css" href="css/myPlugin.css"  />
 
-    <title>Jira Issue Prime Status </title>
+    <title>Jira Coflight Issue Prime Status</title>
     <!--  <meta name="decorator" content="atl.general"> -->
     <script>
-        (document).ready(function() {
+        AJS.$(document).ready(function() {
         	
         	console.log("Velocity file list.vm is loaded");
             
@@ -13,12 +13,13 @@
     </script>
 </head>
 <body class="page-type-admin">
+
 	<div class="content-container">
 	
 	    <div class="content-body">
 	    
-	       <!--  <h1>You've Got #if($issues.size()==0)<span style="color:red">NO</span>#end Issues!</h1> -->
-	
+			<h3>There were some errors</h3>	
+
 	        #if ($errors.size()>0)
 	            <div class="aui-message error shadowed">
 	            
@@ -34,6 +35,8 @@
 	        #end
 	
 	    </div>
+	    
 	</div>
+	
 </body>
 </html>

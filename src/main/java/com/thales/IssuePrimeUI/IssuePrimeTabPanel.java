@@ -6,21 +6,26 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.atlassian.jira.issue.tabpanels.GenericMessageAction;
+import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.plugin.issuetabpanel.AbstractIssueTabPanel3;
 import com.atlassian.jira.plugin.issuetabpanel.GetActionsRequest;
 import com.atlassian.jira.plugin.issuetabpanel.IssueAction;
 import com.atlassian.jira.plugin.issuetabpanel.ShowPanelRequest;
+import com.thales.IssuePrime.Helper.IssueHelper;
+import com.thales.IssuePrime.Helper.ProjectHelper;
 
 public class IssuePrimeTabPanel extends AbstractIssueTabPanel3
 {
     private static final Logger log = LoggerFactory.getLogger(IssuePrimeTabPanel.class);
 	
 	@Override
-	public boolean showPanel(ShowPanelRequest arg0) {
-		log.info(" show Panel ");
+	public boolean showPanel(ShowPanelRequest request) {
 		
-		return true;
+		log.info(" show Panel ");
+		Issue issue = request.issue();
+		// add conditions here to decide whether to show or to hide this panel
+		// Requirement : Ensure that the Issue Tab Panel is displayed only for Task projects or Rhythm Enabled projects.
+		return ( IssueHelper.isIssueTypeTask(issue) || (IssueHelper.isIssueTypeProblemReport(issue) && ProjectHelper.isProjectRhythmEnabled(issue) )) ;
 	}
 
 

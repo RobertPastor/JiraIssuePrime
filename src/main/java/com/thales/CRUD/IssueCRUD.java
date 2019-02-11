@@ -1,8 +1,13 @@
 package com.thales.CRUD;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,15 +26,25 @@ import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.issue.CustomFieldManager;
+import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
 import com.atlassian.jira.issue.MutableIssue;
+import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
+import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.JiraImport;
+import com.atlassian.templaterenderer.RenderingException;
 import com.atlassian.templaterenderer.TemplateRenderer;
+
+import com.thales.IssuePrime.FieldsConfig.FieldsConfiguration;
+import com.thales.IssuePrime.Helper.IssueHelper;
+import com.thales.IssuePrime.Helper.IssueTypeHelper;
+import com.thales.IssuePrime.Helper.ProjectHelper;
 
 @Scanned
 public class IssueCRUD extends HttpServlet {
@@ -52,19 +67,34 @@ public class IssueCRUD extends HttpServlet {
 	private JiraAuthenticationContext authenticationContext;
 	@JiraImport
 	private ConstantsManager constantsManager;
-	//@ConfluenceImport
-	//private PageBuilderService pageBuilderService;
+	@JiraImport
+	private CustomFieldManager customFieldManager;
+
+
+	private static final String ACTION_TYPE_REQUEST_PARAMETER = "actionType";
+	private static final String ISSUE_TYPE_REQUEST_PARAMETER = "issueType";
+	private static final String ISSUE_KEY_REQUEST_PARAMETER = "issueKey";
+	private static final String PROJECT_KEY_REQUEST_PARAMETER = "projectKey";
+
+	private static final String ISSUE_TYPE_TASK = "task";
+	private static final String ISSUE_TYPE_TACHE = "tâche";
+	private static final String ISSUE_TYPE_PROBLEM_REPORT  = "problem report";
+
+	private static final String ERRORS = "errors";
+	private static final String RESULTS = "results";
+
 
 	private static final String LIST_ISSUES_TEMPLATE = "/templates/issueCrud/list.vm";
+	private static final String NEW_TASK_ISSUE_TEMPLATE = "/templates/issueCrud/newTask.vm";
+	private static final String NEW_PROBLEM_REPORT_ISSUE_TEMPLATE = "/templates/issueCrud/newProblemReport.vm";
 	private static final String CREATED_ISSUES_TEMPLATE = "/templates/issueCrud/created.vm";
-	private static final String NEW_ISSUE_TEMPLATE = "/templates/issueCrud/new.vm";
-	//private static final String EDIT_ISSUE_TEMPLATE = "/templates/issueCrud/edit.vm";
 
 	public IssueCRUD(IssueService issueService, ProjectService projectService,
 			SearchService searchService,
 			TemplateRenderer templateRenderer,
 			JiraAuthenticationContext authenticationContext,
 			ConstantsManager constantsManager) {
+
 		this.issueService = issueService;
 		this.projectService = projectService;
 		this.searchService = searchService;
@@ -74,191 +104,490 @@ public class IssueCRUD extends HttpServlet {
 	}
 
 
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private List<String> getMandatoryFieldsList(final String projectKey, final String issueType) {
 
-		//should be the full module key for the <webreference> module.
-		//pageBuilderService.assembler().resources().requireWebResource("myPlugin:myPlugin-resources");
-		// more code
+		List<String> fieldsList = new ArrayList<>();
+		FieldsConfiguration fieldsConfiguration = new FieldsConfiguration();
+		List<Map<String,Boolean>> fieldsMapList = fieldsConfiguration.getMandatoryFields(projectKey, issueType);
+		Iterator<Map<String,Boolean>> iterMapOne = fieldsMapList.iterator();
+		while(iterMapOne.hasNext()) {
+			Map<String,Boolean> fieldMap = iterMapOne.next();
+			Map.Entry<String, Boolean> entry = fieldMap.entrySet().iterator().next();
 
-		String actionType = Optional.ofNullable(req.getParameter("actionType")).orElse("");
-		String issueType = Optional.ofNullable(req.getParameter("issueType")).orElse("");
-		String issueKey = Optional.ofNullable(req.getParameter("issueKey")).orElse("");
+			fieldsList.add(entry.getKey());
+		}
+		return fieldsList;
+	}
+	/**
+	 * 
+	 * @param req
+	 * @param resp
+	 * @param issue
+	 * @param context
+	 * @throws RenderingException
+	 * @throws IOException
+	 */
+	private void prepareAndRenderNewIssueTemplate(HttpServletRequest req, HttpServletResponse resp, 
+			Issue issue, Map<String, Object> context) 
+					throws RenderingException, IOException {
 
-		Map<String, Object> context = new HashMap<>();
+		try {
 
-		if ((actionType.length()==0) && (issueType.length()==0) && (issueKey.length()==0)) {
+			String actionType = Optional.ofNullable(req.getParameter(ACTION_TYPE_REQUEST_PARAMETER)).orElse("");
+			String issueType = Optional.ofNullable(req.getParameter(ISSUE_TYPE_REQUEST_PARAMETER)).orElse("");
+			String issueKey = Optional.ofNullable(req.getParameter(ISSUE_KEY_REQUEST_PARAMETER)).orElse("");
 
-			context.put("errors", Collections.singletonList("Action cancelled by the user"));
+			// send parameters to the velocity template
+			context.put(ACTION_TYPE_REQUEST_PARAMETER, actionType);
+			context.put(ISSUE_TYPE_REQUEST_PARAMETER, issueType);
+			context.put(ISSUE_KEY_REQUEST_PARAMETER, issueKey);
+			context.put("issue", issue);
+
+			log.info(issue.getSummary());
+			log.info(issue.getDescription());
+
+			//log.info(issue.getAssigneeId());
+			log.info(issue.getReporterId());
+
+			String projectKey = IssueHelper.getProjectKey(issue);
+
 			resp.setContentType("text/html;charset=utf-8");
-			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
 
-		} else {
+			switch (actionType) {
+			case "new":
 
-			ApplicationUser user = authenticationContext.getLoggedInUser();
-			IssueResult issueResult = issueService.getIssue(user, issueKey);
-			if (issueResult.getErrorCollection().hasAnyErrors()) {
+				if (issueType.equalsIgnoreCase(ISSUE_TYPE_TASK)) {
 
-				context.put("errors", issueResult.getErrorCollection().getErrors());
-				resp.setContentType("text/html;charset=utf-8");
-				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+					List<String> fieldsList = getMandatoryFieldsList( projectKey, issueType);
+					context.put("fields", fieldsList);
 
-
-			} else {
-
-				MutableIssue issue = issueResult.getIssue();
-				if (issue == null) {
-
-					context.put("errors", Collections.singletonList("Error - cannot find issue with key= " + issueKey));
-					templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-					return;
+					log.debug("cloning a task");
+					templateRenderer.render(NEW_TASK_ISSUE_TEMPLATE, context, resp.getWriter());
 
 				} else {
 
-					// send parameters to the velocity template
-					context.put("actionType", actionType);
-					context.put("issueType", issueType);
-					context.put("issueKey", issueKey);
-					context.put("issue", issue);
+					if (issueType.equalsIgnoreCase(ISSUE_TYPE_PROBLEM_REPORT)) {
 
-					log.info(issue.getSummary());
-					log.info(issue.getDescription());
+						log.debug("Cloning a Problem Report");
 
-					log.info(issue.getAssigneeId());
-					log.info(issue.getReporterId());
+						context.put("projectKey", projectKey);
+						context.put("isRhythmEnabled", ProjectHelper.isProjectRhythmEnabled(issue));
 
-					resp.setContentType("text/html;charset=utf-8");
+						String issueTypeKey = IssueTypeHelper.getIssueTypeKey(issue.getProjectObject(), "Problem Report");
+						log.debug("searching issue type key= " + issueTypeKey);
+						context.put("issueTypeKey", issueTypeKey);
 
-					switch (actionType) {
-					case "new":
+						List<String> fieldsList = getMandatoryFieldsList( projectKey, issueType);
+						context.put("fields", fieldsList);
 
-						templateRenderer.render(NEW_ISSUE_TEMPLATE, context, resp.getWriter());
-						break;
+						templateRenderer.render(NEW_PROBLEM_REPORT_ISSUE_TEMPLATE, context, resp.getWriter());
 
-					default:
+					} else {
 
-						//log.error("Error - Only new action type is implemented!!!");
-						//resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-
-						context.put("errors", Collections.singletonList("Error - Only new action type is implemented!!!"));
+						context.put(ERRORS, Collections.singletonList("Error - unknow Issue Type - " + issueType + " - not implemented!!!"));
 						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-						return;
-					}	
+
+					}
 				}
-			}
+				break;
+
+			default:
+
+				context.put(ERRORS, Collections.singletonList("Error - Only new action type is implemented!!!"));
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+			}	
+
+		} catch (Exception ex) {
+			context.put(ERRORS, Collections.singletonList(ex.getLocalizedMessage()));
+			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
 		}
+
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
-		//String actionType = req.getParameter("actionType"); 
-		String actionType = Optional.ofNullable(req.getParameter("actionType")).orElse("");
-		// hack
-		//actionType = "new";
+		Map<String, Object> context = new HashMap<>();
+		try {
 
-		String targetIssueType = Optional.ofNullable(req.getParameter("issueType")).orElse("");
+			String actionType = Optional.ofNullable(req.getParameter(ACTION_TYPE_REQUEST_PARAMETER)).orElse("");
+			String issueType = Optional.ofNullable(req.getParameter(ISSUE_TYPE_REQUEST_PARAMETER)).orElse("");
+			String issueKey = Optional.ofNullable(req.getParameter(ISSUE_KEY_REQUEST_PARAMETER)).orElse("");
 
-		switch (actionType) {
+			log.debug("Issue type is= " + issueType);
 
-		case "new":
+			if ((actionType.length()==0) || (issueType.length()==0) || (issueKey.length()==0)) {
 
-			if (targetIssueType.equalsIgnoreCase("tâche") || targetIssueType.equalsIgnoreCase("task")) {
-
-				handleIssueCreation(req, resp, targetIssueType);
+				context.put(ERRORS, Collections.singletonList("Action cancelled by the user or insufficient parameters provided by the user"));
+				resp.setContentType("text/html;charset=utf-8");
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
 
 			} else {
 
-				log.error("Only new action type TASK or TÂCHE is implemented!!!");
-				Map<String, Object> context = new HashMap<>();
-				context.put("errors", Collections.singletonList("Only new action type TASK or TÂCHE is implemented - you tried= " + targetIssueType));
-				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				ApplicationUser user = authenticationContext.getLoggedInUser();
+				IssueResult issueResult = issueService.getIssue(user, issueKey);
+
+				if (issueResult.getErrorCollection().hasAnyErrors()) {
+
+					context.put(ERRORS, issueResult.getErrorCollection().getErrors());
+					resp.setContentType("text/html;charset=utf-8");
+					templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+				} else {
+
+					Issue issue = issueResult.getIssue();
+					if (issue == null) {
+
+						context.put(ERRORS, Collections.singletonList("Error - cannot find issue with key= " + issueKey));
+						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+					} else {
+
+						prepareAndRenderNewIssueTemplate(req, resp, issue, context);
+					}
+				}
 			}
-
-			break;
-
-		default:
-
-			log.error("Only new action type TASK or TÂCHE is implemented!!!");
-			Map<String, Object> context = new HashMap<>();
-			context.put("errors", Collections.singletonList("Only new action type TASK or TÂCHE is implemented - you tried= " + targetIssueType));
+		} catch (Exception ex) {
+			context.put(ERRORS, Collections.singletonList(ex.getLocalizedMessage()));
 			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-
 		}
 	}
 
+	/**
+	 * Create an issue - cloning one.
+	 */
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+
+		Map<String, Object> context = new HashMap<>();
+		try {
+
+			String actionType = Optional.ofNullable(req.getParameter(ACTION_TYPE_REQUEST_PARAMETER)).orElse("");
+			String targetIssueType = Optional.ofNullable(req.getParameter(ISSUE_TYPE_REQUEST_PARAMETER)).orElse("");
+			String issueKey = Optional.ofNullable(req.getParameter(ISSUE_KEY_REQUEST_PARAMETER)).orElse("");
+
+			switch (actionType) {
+
+			case "new":
+
+				if ( targetIssueType.equalsIgnoreCase(ISSUE_TYPE_TACHE) || 
+						targetIssueType.equalsIgnoreCase(ISSUE_TYPE_TASK) ) {
+
+					// create the task
+					log.debug("handle task creation");
+					handleTaskCreation(req, resp, issueKey);
+
+				} else {
+
+					if ( targetIssueType.equalsIgnoreCase(ISSUE_TYPE_PROBLEM_REPORT) ) {
+						log.debug("handle Problem Report creation");
+						handleProblemReportCreation(req, resp, issueKey);
+
+					} else {
+
+						log.error("Only new issue type Task or Problem Report is implemented!!!");
+						context.put(ERRORS, Collections.singletonList("Only new action type TASK or TÂCHE is implemented - you tried= " + targetIssueType));
+						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+					}
+				}
+				break;
+
+			default:
+
+				log.error("Only new action type TASK or TÂCHE is implemented!!!");
+				context.put(ERRORS, Collections.singletonList("Only new action type TASK or TÂCHE is implemented - you tried= " + targetIssueType));
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+			}
+		} catch (Exception ex) {
+
+			context.put(ERRORS, Collections.singletonList(ex.getLocalizedMessage()));
+			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+		}
+	}
+
+	private IssueInputParameters setCustomFieldsValues(final Issue sourceIssue, IssueInputParameters issueInputParameters) {
+		
+		/**
+		 * Detection date is required - customfield_9991
+		
+		* Affects Version/s is required - versions
+		* Reproducibility is required - customfield_9988
+		* Detection phase is required - customfield_9989
+		* Priority is required.
+		* Test reference is required - customfield_11202
+		* Severity is required - customfield_9994
+		* Impacted requirements is required - customfield_11203
+		 */
+		
+		//issueInputParameters = issueInputParameters.		
+		
+		List<String> customFieldNamelist = Arrays.asList("customfield_9991", "versions", 
+				"customfield_9988", "customfield_9989", "customfield_11202", "customfield_9994", "customfield_11203");
+		
+		/*
+		 * Iterator<String> iter = customFieldNamelist.iterator();
+		while (iter.hasNext()) {
+			String customFieldName = iter.next();
+			CustomField customField = customFieldManager.getCustomFieldObject(customFieldName);
+			log.debug("Custom field = " + customField.getName() + " - " + customField.getNameKey());
+		}
+		*/
+		return issueInputParameters;
+		//List<CustomField> customFieldsList = customFieldManager.getCustomFieldObjects(sourceIssue);
+		
+	}
 
 	/**
-	 * Create an issue
+	 * 
 	 * @param req
 	 * @param resp
 	 * @throws IOException
 	 */
-	private void handleIssueCreation(HttpServletRequest req, HttpServletResponse resp, final String targetIssueType) throws IOException {
+	private void handleProblemReportCreation(HttpServletRequest req, HttpServletResponse resp, String issueKey) throws IOException {
+
+		ApplicationUser user = authenticationContext.getLoggedInUser();
+		log.debug("issue key= " + issueKey);
+		Map<String, Object> context = new HashMap<>();
+
+		try {
+
+			String targetPrimeProjectKey =  Optional.ofNullable(req.getParameter(PROJECT_KEY_REQUEST_PARAMETER)).orElse("");
+			log.debug("target project key = " + targetPrimeProjectKey);
+
+			if (targetPrimeProjectKey.length()>0) {
+
+				Project project = projectService.getProjectByKey(user, targetPrimeProjectKey).getProject();
+
+				log.debug("target project name= " + project.getName());
+
+				// warning it is about a Problem Report
+				IssueType problemReportIssueType = constantsManager.getAllIssueTypeObjects().stream().filter(
+						issueType -> issueType.getName().equalsIgnoreCase(ISSUE_TYPE_PROBLEM_REPORT)).findFirst().orElse(null);
+
+				// identify all fields needed for a Problem Report creation
+				if (problemReportIssueType != null) {
+
+					log.debug("Problem Report issue type id= " + problemReportIssueType.getId() + " - key= " + problemReportIssueType.getName());
+					Issue sourceIssue = IssueHelper.getIssue(issueKey, authenticationContext, issueService);
+
+					if (sourceIssue != null) {
+
+						log.debug("source issue = " + sourceIssue.getKey());
+
+						// need to know all the mandatory fields in the ISSUE creation operations for this issue type in the target project
+						IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
+						issueInputParameters.setSummary(req.getParameter("summary"))
+						.setDescription("Issue-Prime - primed by [~" + user.getKey() + "] - " + req.getParameter("description"))
+						.setProjectId(project.getId())
+						.setIssueTypeId(problemReportIssueType.getId());
+						
+						issueInputParameters.setSkipScreenCheck(true);
+						issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
+						
+						// set affected versions
+						if (sourceIssue.getAffectedVersions().isEmpty() == false ) {
+							Collection<Version> affectedVersions = sourceIssue.getAffectedVersions();
+							Iterator<Version> iter = affectedVersions.iterator();
+							while (iter.hasNext()) {
+								Version version = iter.next();
+								log.debug("affected versions = " + version.getName());
+								issueInputParameters.setAffectedVersionIds(version.getId());
+							}
+						}
+						
+						// Reproducibility - customfield_9988 is an option field.
+						//Object value = sourceIssue.getCustomFieldValue(customFieldManager.getCustomFieldObject("customfield_9988"));
+						//log.debug("Reproducibility= " + value.toString());
+						
+						//issueInputParameters.addCustomFieldValue("customfield_9988",value.toString());
+						
+						if (sourceIssue.getSecurityLevelId() != null) {
+							issueInputParameters.setSecurityLevelId(sourceIssue.getSecurityLevelId());
+						}
+						
+						if (sourceIssue.getPriority() !=  null) {
+							issueInputParameters.setPriorityId(sourceIssue.getPriority().getId());
+						}
+						
+						// set all custom fields values
+						//setCustomFieldsValues(sourceIssue, issueInputParameters);
+						
+						// set default values
+						//issueInputParameters.setApplyDefaultValuesWhenParameterNotProvided(true);
+
+						if (sourceIssue.getReporter() != null ) {
+							issueInputParameters.setReporterId(sourceIssue.getReporterId());
+						}
+						if (sourceIssue.getAssignee() != null) {
+							issueInputParameters.setAssigneeId(sourceIssue.getAssigneeId());
+						}
+
+						IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
+
+						if (result.getErrorCollection().hasAnyErrors()) {
+
+							log.debug("there were errors - during validate create - " + result.getErrorCollection().getErrors().toString());
+
+							context.put(ERRORS, result.getErrorCollection().getErrors());
+							resp.setContentType("text/html;charset=utf-8");
+							templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+						} else {
+
+							IssueResult issueResult = issueService.create(user, result);
+							if (issueResult.getErrorCollection().hasAnyErrors()) {
+
+								log.debug("there were errors - during create - " + issueResult.getErrorCollection().getErrors().toString());
+
+								context.put(ERRORS, issueResult.getErrorCollection().getErrors());
+								resp.setContentType("text/html;charset=utf-8");
+								templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+							} else {
+
+								MutableIssue issue = issueResult.getIssue();
+
+								if (issue != null ) {
+
+									String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
+
+									context.put(RESULTS, Collections.singletonList("Issue " + issue.getKey() + " correctly created"));
+									context.put("issueKey", issue.getKey() );
+									context.put("href", baseURL + "/browse/" + issue.getKey() );
+									templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
+
+								} else {
+
+									context.put(ERRORS, Collections.singletonList("target issue not created "));
+									templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+								}
+							}
+
+						}
+					} else {
+						context.put(ERRORS, Collections.singletonList("Source Issue not found "));
+						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+					}
+				} else {
+
+					context.put(ERRORS, Collections.singletonList("Problem Report Issue type not found "));
+					templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				}
+			} else {
+
+				context.put(ERRORS, Collections.singletonList("Target Project Key = " + targetPrimeProjectKey + " is not defined"));
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+			}
+
+		} catch ( Exception ex) {
+
+			context.put(ERRORS, Collections.singletonList(ex.getLocalizedMessage()));
+			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+		}
+	}
+
+	/**
+	 * Create a task in TUTORIAL from a task in the input issue
+	 * @param req
+	 * @param resp
+	 * @param issueKey 
+	 * @throws IOException
+	 */
+	private void handleTaskCreation(HttpServletRequest req, HttpServletResponse resp, String issueKey) throws IOException {
 
 		ApplicationUser user = authenticationContext.getLoggedInUser();
 		final String targetPrimeProjectKey = "TUTORIAL";
 
 		Map<String, Object> context = new HashMap<>();
 
-		Project project = projectService.getProjectByKey(user, targetPrimeProjectKey).getProject();
+		try {
+			Project project = projectService.getProjectByKey(user, targetPrimeProjectKey).getProject();
 
-		if (project == null) {
-			context.put("errors", Collections.singletonList("Try to prime into Project with key " + targetPrimeProjectKey + " but project with this KEY doesn't exist"));
+			if (project == null) {
+				context.put(ERRORS, Collections.singletonList("Try to prime into Project with key " + targetPrimeProjectKey + " but project with this KEY doesn't exist"));
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+			} else {
+
+				// warning the type name is task in English or tâche in French
+				IssueType taskIssueType = constantsManager.getAllIssueTypeObjects().stream().filter(
+						issueType -> issueType.getName().equalsIgnoreCase(ISSUE_TYPE_TACHE)).findFirst().orElse(null);
+
+				if (taskIssueType == null) {
+
+					taskIssueType = constantsManager.getAllIssueTypeObjects().stream().filter(
+							issueType -> issueType.getName().equalsIgnoreCase(ISSUE_TYPE_TASK)).findFirst().orElse(null);
+
+					if(taskIssueType == null) {
+
+						context.put(ERRORS, Collections.singletonList("Can't find Task issue type or Tâche issue type -> will try to create only these issue types"));
+						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+					} else {
+
+						Issue sourceIssue = IssueHelper.getIssue(issueKey, authenticationContext, issueService);
+
+						// need to know all the mandatory fields in the ISSUE creation operations for this issue type in the target project
+						IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
+						issueInputParameters.setSummary(req.getParameter("summary"))
+						.setDescription("Issue-Prime - primed by [~" + user.getKey() + "] - " + req.getParameter("description"))
+						.setProjectId(project.getId())
+						.setIssueTypeId(taskIssueType.getId());
+
+						if (sourceIssue != null) {
+							issueInputParameters.setReporterId(sourceIssue.getReporterId());
+							issueInputParameters.setAssigneeId(sourceIssue.getAssigneeId());
+						} else {
+							issueInputParameters.setReporterId(user.getName());
+							issueInputParameters.setAssigneeId(user.getName());
+						}
+
+						IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
+
+						if (result.getErrorCollection().hasAnyErrors()) {
+
+							context.put(ERRORS, result.getErrorCollection().getErrors());
+							resp.setContentType("text/html;charset=utf-8");
+							templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+
+						} else {
+
+							IssueResult issueResult = issueService.create(user, result);
+							if (issueResult.getErrorCollection().hasAnyErrors()) {
+
+								log.debug("there were errors - during create - " + issueResult.getErrorCollection().getErrors().toString());
+
+								context.put(ERRORS, issueResult.getErrorCollection().getErrors());
+								resp.setContentType("text/html;charset=utf-8");
+								templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+								
+							} else {
+							
+								MutableIssue issue = issueResult.getIssue();
+
+								String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
+
+								context.put(RESULTS, Collections.singletonList("Issue " + issue.getKey() + " correctly created"));
+								context.put("issueKey", issue.getKey() );
+								context.put("href", baseURL + "/browse/" + issue.getKey() );
+								templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
+							}
+						}
+					}
+				} 
+			}
+
+		} catch (Exception ex) {
+
+			context.put(ERRORS, Collections.singletonList(ex.getLocalizedMessage()));
 			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-			return;
-		}
-
-		// warning the type name is task in English or tâche in French
-		IssueType taskIssueType = constantsManager.getAllIssueTypeObjects().stream().filter(
-				issueType -> issueType.getName().equalsIgnoreCase("tâche")).findFirst().orElse(null);
-
-		if (taskIssueType == null) {
-
-			taskIssueType = constantsManager.getAllIssueTypeObjects().stream().filter(
-					issueType -> issueType.getName().equalsIgnoreCase("task")).findFirst().orElse(null);
-		}
-
-		if(taskIssueType == null) {
-			context.put("errors", Collections.singletonList("Can't find Task issue type or Tâche issue type -> will try to create only these issue types"));
-			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-			return;
-		}
-
-		// need to know all the mandatory fields in the ISSUE creation operations for this issue type in the target project
-		IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
-		issueInputParameters.setSummary(req.getParameter("summary"))
-			.setDescription("Coflight-Prime - " + req.getParameter("description"))
-			.setAssigneeId(user.getName())
-			.setReporterId(user.getName())
-			.setProjectId(project.getId())
-			.setIssueTypeId(taskIssueType.getId());
-
-		IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
-
-		if (result.getErrorCollection().hasAnyErrors()) {
-
-			context.put("errors", result.getErrorCollection().getErrors());
-			resp.setContentType("text/html;charset=utf-8");
-			templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-			return;
-
-		} else {
-
-			IssueResult issueResult = issueService.create(user, result);
-			MutableIssue issue = issueResult.getIssue();
-
-			String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
-			String redirection = "/jira/browse/" + issue.getProjectObject().getKey();
-			//resp.sendRedirect(redirection);
-			
-			context.put("results", Collections.singletonList("Issue " + issue.getKey() + " correctly created"));
-			context.put("issueKey", issue.getKey() );
-			context.put("href", baseURL + "/browse/" + issue.getKey() );
-			templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
-			return;
 		}
 	}
-
 
 }

@@ -33,8 +33,22 @@
 	        
 	       		 
 		    <div class="aui-message shadowed">
-					<a href="$href" target="_blank"> $issueKey </a>
+				<a href="$href" target="_blank"> $issueKey </a>
 			</div>
+			
+			#if ($errors.size()>0)
+	            <div class="aui-message error shadowed">
+	            
+	                #foreach($error in $errors)
+	                    <p class="title">
+	                        <span class="aui-icon icon-error"></span>
+	                        <strong>$error</strong>
+	                    </p>
+	                #end
+	            
+	            </div>
+	            <!-- .aui-message -->
+	        #end
 				
 				
 	    </div>

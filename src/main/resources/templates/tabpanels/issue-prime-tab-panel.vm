@@ -4,45 +4,60 @@
 
 <div class="mod-header">
 
-    <!-- <h3>$i18n.getText('This panel allows you to prime the current issue')</h3> -->
+    
     <h3>This panel allows you to prime the current issue</h3>
-	<span>Only tasks (for demo purpose) , IRFs or PCRs can be primed.</span>
+    
+	<span>Only tasks and Problem Reports (both for demo purpose) , IRFs or PCRs can be primed.</span>
 	<span>The user must have adequate issue creation permissions in the target project (TUTORIAL, PCR or SCO).</span>
     <div>
             
-            <table border="1px">
-            	<tr>
-            		<th>
-            			<div>Issue Key</div>
-            		</th>
-            		<th>
-            			<div>Issue Type</div>
-            		</th>
-            		<th>
-            			<div>Project Name</div>
-            		</th>
-            		<th>
-            			<div>Current User</div>
-            		</th>
-            	</tr>
-            	<tr>
-            		<td>
-            			<div readonly> $issue.getKey() </div>
-            			<!--  <input id="issueKey" name="issueKey" value="$issue.getKey()" readonly> -->
-            		</td>
-            		<td>
-            		    <div readonly> $issue.getIssueType().getName() </div>
-            		    <!-- input id="issueType" name="issueType" value="" readonly> -->
-            		</td>
-            		<td>
-            			<div readonly> $issue.getProjectObject().getName() </div>
-            			<!-- <input id="project" name="project" value="" readonly> -->
-            		</td>
-            		<td>
-            			<div readonly> $user.getName() </div>
-            			<!-- <input id="project" name="project" value="" readonly> -->
-            		</td>
-            	</tr>
+            <table border="1px" class="aui">
+            	<thead>
+            		<tr>
+	            		<th>
+	            			<div>Issue Key</div>
+	            		</th>
+	            		<th>
+	            			<div>Issue Type</div>
+	            		</th>
+	            		<th>
+	            			<div>Project Name</div>
+	            		</th>
+	            		<th>
+	            			<div>Project Key</div>
+	            		</th>
+	            		<th>
+	            			<div>Current User</div>
+	            		</th>
+	            		<th>
+	            			<div>Issue Type Fields Configuration is available </div>
+	            		</th>
+	            	</tr>
+            	</thead>
+            	<tbody>
+            		<tr>
+	            		<td>
+	            			<div readonly> $issue.getKey() </div>
+	            		</td>
+	            		<td>
+	            		    <div readonly> $issue.getIssueType().getName() </div>
+	            		</td>
+	            		<td>
+	            			<div readonly> $issue.getProjectObject().getName() </div>
+	            		</td>
+	            		<td>
+	            			<div readonly> $issue.getProjectObject().getKey() </div>
+	            		</td>
+	            		<td>
+	            			<div readonly> $user.getName() </div>
+	            		</td>
+	            		<td>
+	            			<div readonly> $fieldsConfig </div>
+	            			<div readonly> $projectFieldsConfig </div>
+	            			<div readonly> $issueTypeFieldsConfig </div>
+	            		</td>
+	            	</tr>
+            	</tbody>
             
             </table>
                         
@@ -52,41 +67,57 @@
             <!--This is a comment. Comments are not displayed in the browser -->
             <!-- <input type="submit" class="button" value="Prime this issue"> -->
             
-            <table border="1px">
-            	<tr>
-            		<td>
-            			<div>Prime a Task in a new Task in the project with key TUTORIAL</div>
-            		</td>
-            		<td>
-            			<div>Prime an IRF (issueType=IRF) into a PCR (issueType=PCR)</div>
-            		</td>
-            		<td>
-            			<div>Prime a PCR (issueType=PCR) in a SCO (issueType=SCO)</div>
-            		</td>
-            	</tr>
+            <table border="1px" class="aui">
+            	<thead>
+            		<tr>
+	            		<th>
+	            			<div>Prime a Task in a new Task in the project with key TUTORIAL</div>
+	            		</th>
+	            		<th>
+	            		    <div>Prime a Problem Report from a Rhythm Enabled Project</div>
+	            		</th>
+	            		<th>
+	            			<div>Prime an IRF (issueType=IRF) into a PCR (issueType=PCR)</div>
+	            		</th>
+	            		<th>
+	            			<div>Prime a PCR (issueType=PCR) in a SCO (issueType=SCO)</div>
+	            		</th>
+	            	</tr>
+            	</thead>
             	
-            	<br>
-            	
-            	<tr>
-            		<td>
-            			<div>
-            			 	<!-- add action type as a parameter in the request -->
-							<a href="${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=task&issueKey=$issue.getKey()" target="_blank">Prime this task</a>
-            			</div>
-            		</td>
-            		<td>
-            			<div>
-            			 	<!-- add action type as a parameter in the request -->
-							<a href="${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=IRF&issueKey=$issue.getKey()" target="_blank">Prime this IRF to a PCR</a>
-            			</div>
-            		</td>
-            		<td>
-            		<div>
-            			 	<!-- add action type as a parameter in the request -->
-							<a href="${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=SCO&issueKey=$issue.getKey()" target="_blank">Prime this PCR to a SCO</a>
-            			</div>
-            		</td>
-            	</tr>
+            	<tbody>
+	            	<tr>
+	            		<td>
+	            			<div>
+	            			 	<!-- add action type as a parameter in the request -->
+	            			 	#if ($issue.getIssueType().getName() == "Task")
+	            			 		#set( $url = "${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=$issue.getIssueType().getName()&issueKey=$issue.getKey()" )
+									<a href=$url target="_blank">Prime this task</a>
+								#end
+	            			</div>
+	            		</td>
+	            		<td>
+	            			<div>
+	            				#if ($issue.getIssueType().getName() == "Problem Report") 
+	            			 		#set( $url = "${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=Problem+Report&issueKey=$issue.getKey()" )
+									<a href=$url target="_blank">Prime this Problem Report</a>
+								#end
+	            			<div>
+	            		</td>
+	            		<td>
+	            			<div>
+	            			 	<!-- add action type as a parameter in the request -->
+								<!-- <a href="${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=IRF&issueKey=$issue.getKey()" target="_blank">Prime this IRF to a PCR</a> -->
+	            			</div>
+	            		</td>
+	            		<td>
+	            		<div>
+	            			 	<!-- add action type as a parameter in the request -->
+								<!-- <a href="${baseurl}/plugins/servlet/issuePrime?actionType=new&issueType=SCO&issueKey=$issue.getKey()" target="_blank">Prime this PCR to a SCO</a> -->
+	            			</div>
+	            		</td>
+	            	</tr>
+	            </tbody>
             </table>
            
     </div>

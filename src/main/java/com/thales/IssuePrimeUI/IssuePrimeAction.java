@@ -13,6 +13,9 @@ import com.atlassian.jira.plugin.issuetabpanel.AbstractIssueAction;
 import com.atlassian.jira.plugin.issuetabpanel.IssueTabPanelModuleDescriptor;
 import com.atlassian.jira.template.VelocityTemplatingEngine;
 import com.atlassian.jira.user.ApplicationUser;
+import com.thales.IssuePrime.FieldsConfig.FieldsConfiguration;
+import com.thales.IssuePrime.FieldsConfig.FieldsConfigurationProject;
+import com.thales.IssuePrime.Helper.IssueHelper;
 
 import static com.atlassian.jira.template.TemplateSources.file;
 
@@ -40,25 +43,44 @@ public class IssuePrimeAction extends AbstractIssueAction {
 
 	@Override
 	protected void populateVelocityParams(Map params) {
+		
 		params.put("issue", issue);
 		params.put("user", remoteUser);
 		
-		log.info(issue.getKey());
-		log.info(issue.getIssueTypeId());
-		log.info(issue.getIssueType().getName());
-		log.info(issue.getProjectObject().getName());
+		FieldsConfiguration fieldsConfiguration = new FieldsConfiguration();
+		boolean fieldsConfigAvailable = fieldsConfiguration.isAvailable();
+		params.put("fieldsConfig", fieldsConfigAvailable);
 		
+		log.debug(String.valueOf(fieldsConfigAvailable));
+		
+		String projectKey = IssueHelper.getProjectKey(issue);
+		boolean projectFieldsConfigAvailable = fieldsConfiguration.hasProjectKey(projectKey);
+		params.put("projectFieldsConfig", projectFieldsConfigAvailable);
+		
+		log.debug(String.valueOf(projectFieldsConfigAvailable));
+		
+		String issueTypeName = IssueHelper.getIssueTypeName(issue);
+		boolean issueTypeFieldsConfigAvailable = FieldsConfigurationProject.hasIssueTypeName(fieldsConfiguration.getJsonProject(projectKey), issueTypeName);
+		params.put("issueTypeFieldsConfig", issueTypeFieldsConfigAvailable);
+		
+		log.debug(String.valueOf(issueTypeFieldsConfigAvailable));
+
+		log.debug(issue.getKey());
+		log.debug(issue.getIssueTypeId());
+		log.debug(issue.getIssueType().getName());
+		log.debug(issue.getProjectObject().getName());
+		log.debug( String.valueOf( fieldsConfigAvailable ) );
 	}
 
-
+	@Override
 	public String getHtml() {
+		
 		final String templateName = "issue-prime-tab-panel.vm";
 		final VelocityTemplatingEngine templatingEngine = ComponentAccessor.getComponent(VelocityTemplatingEngine.class);
 		final Map<String, Object> params = new HashMap<String, Object>();
 		populateVelocityParams(params);
 		return templatingEngine.render(file(PLUGIN_TEMPLATES + templateName)).applying(params).asHtml();
+		
 	}
-
-
 
 }

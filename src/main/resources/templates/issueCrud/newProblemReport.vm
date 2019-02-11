@@ -1,0 +1,168 @@
+<html>
+<head>
+	<!--   <link rel="stylesheet" type="text/css" href="css/myPlugin.css"  /> -->
+	<!--  $webResourceManager.requireResource("myPlugin:myPlugin-resources") -->
+	<!--  $webResourceManager.requireResourcesForContext("myPlugin") -->
+
+    <title>Create a Problem Report </title>
+    
+
+</head>
+<body class="page-type-admin">
+
+	<div class="content-container">
+	
+	    <div class="content-body">
+	    	
+	    		<h2>Clone a Problem Report in the current project</h2>
+	    		
+	    		<form method="post" id="h" action="issuePrime" class="aui">
+            
+	            	<!--  input with pre defined names to be used in the POST servlet -->
+	            	<label for="actionTypeId"> Action Type </label>
+	            	<input id="actionTypeId" name="actionType" class="text long-field" type="text" value="$actionType" readonly>
+	            	
+	            	<label for="issueTypeId"> Issue Type </label>
+	            	<input id="issueTypeId" name="issueType" class="text long-field" type="text" value="$issueType" readonly>
+	            	
+	            	<label for="issueKeyId"> Issue Key </label>
+	            	<input id="issueKeyId" name="issueKey" class="text long-field" type="text" value="$issueKey" readonly>
+	            	
+	            	<label for="projectKeyId"> Project Key </label>
+	            	<input id="projectKeyId" name="projectKey" class="text long-field" type="text" value="$projectKey" readonly>
+
+					<div>
+						<strong>$projectKey</strong> is Rhythm Enabled : <strong>$isRhythmEnabled</strong>
+						<strong>$projectKey</strong> cloning issue Type with key : <strong>$issueTypeKey</strong>
+					</div>
+					
+					<div class="field-group">
+	                    <label for="h-fsummary">
+	                        Summary
+	                        <span class="aui-icon icon-required"></span>
+	                        <span class="content">(required)</span>
+	                    </label>
+	                    <input id="h-fsummary" class="text long-field" type="text" name="summary" value="$issue.getSummary()">
+	                </div>
+	                
+	                <div class="field-group">
+	                    <label for="h-fdescription">
+	                        Description
+	                        <span class="aui-icon icon-required"></span>
+	                        <span class="content">(required)</span>
+	                    </label>
+	                    <textarea id="h-fdescription" name="description">$issue.getDescription()</textarea>
+	                </div>
+	                
+	                #if ($issue.getAssigneeId()) 
+	                
+		                <div class="field-group">
+		                    <label for="h-assignee">
+		                        Assignee
+		                        <span class="aui-icon icon-required"></span>
+		                        <span class="content">(required)</span>
+		                    </label>
+		                    <textarea id="h-assignee" name="assignee">$issue.getAssigneeId()</textarea>
+		                </div>
+	                
+	                #end
+	                
+	                #if ($issue.getReporterId()) 
+	                
+		                <div class="field-group">
+		                    <label for="h-reporter">
+		                        Reporter
+		                        <span class="aui-icon icon-required"></span>
+		                        <span class="content">(required)</span>
+		                    </label>
+		                    <textarea id="h-reporter" name="reporter">$issue.getReporterId()</textarea>
+		                </div>
+		                
+		            #end
+		            
+		            #if ($issue.getSecurityLevelId()) 
+	                
+		                <div class="field-group">
+		                    <label for="h-security">
+		                        Security Level
+		                        <span class="aui-icon icon-required"></span>
+		                        <span class="content">(required)</span>
+		                    </label>
+		                    <textarea id="h-security" name="securityLevel">$issue.getSecurityLevelId()</textarea>
+		                </div>
+		                
+		            #end
+		            
+		            #if ($issue.getPriority()) 
+	                
+		                <div class="field-group">
+		                    <label for="h-priority">
+		                        Priority
+		                        <span class="aui-icon icon-required"></span>
+		                        <span class="content">(required)</span>
+		                    </label>
+		                    <textarea id="h-priority" name="priority">$issue.getPriority().getId()</textarea>
+		                </div>
+		                
+		            #end
+	                
+	                <div class="buttons">
+	                    <input class="button" type="submit" value="Create"> 
+	                    <a href="issuePrime">Cancel</a>
+	                </div>
+	                
+                </form>
+				
+		</div>
+	    
+	    	<div class="aui-message shadowed">
+	    	
+		    <table border="1px" class="aui">
+	        	<thead>
+	            		<tr>
+		            		<th>
+		            			<div>Field Name</div>
+		            		</th>
+		            		<th>
+		            			<div>Required</div>
+		            		</th>
+		            	</tr>
+		       	</thead>
+	            <tbody>
+	            	
+		        	#if ($fields)
+		        	
+		        		#foreach($field in $fields)
+		        	
+			        	<tr>
+			            	<td>
+			            			<div readonly> 
+				            			<p class="title">
+					                        <span class="aui-icon"></span>
+					                        <strong>$field</strong>
+					                    </p>
+									 </div>
+			            	</td>
+				            
+				            <td>
+			            			<div readonly> 
+				            			<p class="title">
+					                        <span class="aui-icon"></span>
+					                        <strong>required is True</strong>
+					                    </p>
+	
+									 </div>
+			            	</td>      
+				       	</tr>
+				       	
+				       	#end
+		        	#end
+		        
+				</tbody>
+			</table>		
+		        
+	        </div>
+	                
+	</div>
+	
+</body>
