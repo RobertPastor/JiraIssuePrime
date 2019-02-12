@@ -83,6 +83,12 @@ public class FieldsConfigurationProject extends FieldsConfigurationIssueType  {
 		return false;
 	}
 
+	/**
+	 * 
+	 * @param jsonProject
+	 * @param issueTypeName
+	 * @return
+	 */
 	public static JSONObject getIssueType(final JSONObject jsonProject, final String issueTypeName) {
 
 
@@ -101,6 +107,32 @@ public class FieldsConfigurationProject extends FieldsConfigurationIssueType  {
 						return jsonIssueType;
 						//FieldsConfigurationIssueType fieldsConfigurationIssuetype = new FieldsConfigurationIssueType(jsonIssueType);
 
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+
+	/**
+	 * return the JSON object corresponding to the project Key
+	 * @param projectKey
+	 * @return
+	 */
+	public JSONObject getJsonProject(final String projectKey) {
+
+		if (jsonObject != null) {
+
+			JSONArray jsonProjectsArray = jsonObject.optJSONArray("projects");
+			if (jsonProjectsArray != null) {
+
+				for(int i=0; i<jsonProjectsArray.length(); i++){
+
+					JSONObject jsonProject = jsonProjectsArray.optJSONObject(i);
+
+					if ( jsonProject.optString("key","").equalsIgnoreCase(projectKey) ) {
+						return jsonProject;
 					}
 				}
 			}

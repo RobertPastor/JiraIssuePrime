@@ -21,7 +21,7 @@ public class FieldsConfigurationIssueType {
 	private static final Logger log = LoggerFactory.getLogger(FieldsConfigurationIssueType.class);
 
 	protected JSONObject jsonObject = null;
-	
+
 	/**
 	 * "issuetypes": [
                 {
@@ -48,10 +48,11 @@ public class FieldsConfigurationIssueType {
 
 	protected FieldsConfigurationIssueType() {
 
+		log.debug("---------------init-------------");
 		init();
 	}
 
-	
+
 	/**
 	 * loads the JSON file containing the fields configuration
 	 * @param projectKey
@@ -96,7 +97,7 @@ public class FieldsConfigurationIssueType {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * list of mandatory fields
 	 * @param issueType
@@ -137,17 +138,17 @@ public class FieldsConfigurationIssueType {
 	}
 
 	/**
-	 * 
+	 * returns true if custom field with id has been found
 	 * @param issueTypeJsonObj
 	 * @param customFieldId
 	 * @return
 	 */
-	public static boolean hasCustomFieldByID(final JSONObject issueTypeJsonObj, final String customFieldId) {
+	protected static boolean hasCustomFieldByID(final JSONObject issueTypeJsonObj, final String customFieldId) {
 
 
 		JSONObject fieldsObject = issueTypeJsonObj.optJSONObject("fields");
 		if (fieldsObject != null) {
-			
+
 			Iterator<String> iter = fieldsObject.keys();
 			while (iter.hasNext()) {
 
@@ -160,6 +161,42 @@ public class FieldsConfigurationIssueType {
 		}
 		return false;
 	}
-	
+
+	protected static List<String> getCustomFieldsFromClass(final JSONObject issueTypeJsonObj, final String customClassName) {
+
+		log.debug("--------------getCustomFieldsFromClass-----------------------");
+		List<String> customFieldsIds = new ArrayList<>();
+
+		JSONObject fieldsObject = issueTypeJsonObj.optJSONObject("fields");
+		if (fieldsObject != null) {
+
+			Iterator<String> iter = fieldsObject.keys();
+			while (iter.hasNext()) {
+
+				String fieldKey = iter.next();
+				//log.debug("looking into field with key= " + fieldKey);
+
+				JSONObject fieldObject = fieldsObject.optJSONObject(fieldKey);
+				JSONObject fieldSchemaObject = fieldObject.optJSONObject("schema");
+				if (fieldSchemaObject != null) {
+					
+					String fieldSchemaCustomValue = fieldSchemaObject.optString("custom", "");
+					
+					if (fieldSchemaCustomValue.equalsIgnoreCase(customClassName)) {
+						
+						log.debug("--------------getCustomFieldsFromClass---------- " + fieldObject.optString("name", "") + " ----name found---------------------");
+						log.debug("--------------getCustomFieldsFromClass--schema found---------------------");
+						log.debug("--------------getCustomFieldsFromClass------------schema class name found ++++++++++++---------------------");
+
+						customFieldsIds.add(fieldKey);
+					}
+					
+				}
+			}
+		}
+		return customFieldsIds;
+
+	}
+
 
 }

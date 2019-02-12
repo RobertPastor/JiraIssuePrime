@@ -1,10 +1,5 @@
 package com.thales.IssuePrime.FieldsConfig;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.atlassian.jira.util.json.JSONArray;
-import com.atlassian.jira.util.json.JSONException;
 import com.atlassian.jira.util.json.JSONObject;
 
 
@@ -37,9 +31,9 @@ public class FieldsConfiguration extends FieldsConfigurationProject {
 
 	private static final Logger log = LoggerFactory.getLogger(FieldsConfiguration.class);
 
-	
+
 	public FieldsConfiguration() {
-		
+
 		super();
 	}
 
@@ -47,7 +41,16 @@ public class FieldsConfiguration extends FieldsConfigurationProject {
 		return jsonObject != null;
 	}
 
+
+
+	/**
+	 * retrieves the list of mandatory fields
+	 * @param projectKey
+	 * @param issueTypeName
+	 * @return
+	 */
 	public  List<Map<String,Boolean>> getMandatoryFields(final String projectKey, final String issueTypeName) {
+
 
 		if (hasProjectKey(projectKey)) {
 
@@ -70,6 +73,7 @@ public class FieldsConfiguration extends FieldsConfigurationProject {
 		return new ArrayList<>();
 	}
 
+
 	/**
 	 * check that customfield such as customfield_9988 is available for a project key and an issue type (Problem Report)
 	 * @param projectKey
@@ -77,8 +81,7 @@ public class FieldsConfiguration extends FieldsConfigurationProject {
 	 * @param customFieldId
 	 * @return
 	 */
-	public boolean hasCustomField(final String projectKey, final String issueTypeName, 
-			final String customFieldId) {
+	public boolean hasCustomField(final String projectKey, final String issueTypeName, final String customFieldId) {
 
 		if (hasProjectKey(projectKey)) {
 
@@ -88,35 +91,37 @@ public class FieldsConfiguration extends FieldsConfigurationProject {
 
 				JSONObject issueTypeJsonObj = FieldsConfigurationProject.getIssueType(getJsonProject(projectKey), issueTypeName);
 				return FieldsConfigurationIssueType.hasCustomFieldByID(issueTypeJsonObj, customFieldId);
-				
+
 			}
 		}
 		return false;
 	}
+	
+	
 	/**
-	 * 
+	 * 						"custom": "com.atlassian.jira.plugin.system.customfieldtypes:select",
+
 	 * @param projectKey
+	 * @param issueTypeName
 	 * @return
 	 */
-	public JSONObject getJsonProject(final String projectKey) {
-
-		if (jsonObject != null) {
-
-			JSONArray jsonProjectsArray = jsonObject.optJSONArray("projects");
-			if (jsonProjectsArray != null) {
-
-				for(int i=0; i<jsonProjectsArray.length(); i++){
-
-					JSONObject jsonProject = jsonProjectsArray.optJSONObject(i);
-
-					if ( jsonProject.optString("key","").equalsIgnoreCase(projectKey) ) {
-						return jsonProject;
-					}
-				}
+	public List<String> getCustomFieldsFromClass(final String projectKey, final String issueTypeName, final String customClassName) {
+		
+		List<String> customFieldsIds = new ArrayList<>();
+		
+		JSONObject jsonProjectObject = getJsonProject( projectKey );
+		if (jsonProjectObject != null) {
+			
+			JSONObject jsonIssueTypeObject = getIssueType(jsonProjectObject, issueTypeName);
+			if ( jsonIssueTypeObject != null) {
+				
+				return getCustomFieldsFromClass(jsonIssueTypeObject, customClassName);
 			}
 		}
-		return null;
+		return customFieldsIds;
 	}
+	
+	
 	/**
 	 * 
 	 * check that the fields configuration contains this project key
@@ -154,7 +159,7 @@ public class FieldsConfiguration extends FieldsConfigurationProject {
 		return false;
 	}
 
-	
+
 
 
 }
