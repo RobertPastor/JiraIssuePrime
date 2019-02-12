@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import com.atlassian.jira.util.json.JSONArray;
 import com.atlassian.jira.util.json.JSONObject;
 
-public class FieldsConfigurationProject {
+public class FieldsConfigurationProject extends FieldsConfigurationIssueType  {
 
 	private static final Logger log = LoggerFactory.getLogger(FieldsConfigurationProject.class);
 
@@ -50,9 +50,9 @@ public class FieldsConfigurationProject {
 	 */
 
 
-	private FieldsConfigurationProject() {
+	protected FieldsConfigurationProject() {
 
-
+		super();
 	}
 
 	public static boolean hasIssueTypeName(final JSONObject jsonProject, final String issueTypeName) {

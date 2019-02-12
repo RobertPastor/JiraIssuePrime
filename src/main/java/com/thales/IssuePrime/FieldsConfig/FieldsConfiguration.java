@@ -33,15 +33,14 @@ import com.atlassian.jira.util.json.JSONObject;
             "name": "Example Project",
  *
  */
-public class FieldsConfiguration {
+public class FieldsConfiguration extends FieldsConfigurationProject {
 
 	private static final Logger log = LoggerFactory.getLogger(FieldsConfiguration.class);
 
-	private  JSONObject jsonObject = null;
-
+	
 	public FieldsConfiguration() {
 		
-		init();
+		super();
 	}
 
 	public boolean isAvailable() {
@@ -155,51 +154,7 @@ public class FieldsConfiguration {
 		return false;
 	}
 
-	/**
-	 * loads the JSON file containing the fields configuration
-	 * @param projectKey
-	 * @return
-	 */
-	private boolean init() {
-
-		//String jsonFileName = projectKey + "-fields.json";
-		String jsonFileName = "config/rgswebsrv22-fields.json";
-
-		InputStream inputStream = null;
-		jsonObject = null;
-		try {
-			inputStream = FieldsConfiguration.class.getClassLoader().getResourceAsStream(jsonFileName);
-
-			if (inputStream != null) {
-				BufferedReader streamReader = new BufferedReader(
-						new InputStreamReader(inputStream, "UTF-8"));
-
-				StringBuilder responseStrBuilder = new StringBuilder();
-
-				String inputStr;
-				while ((inputStr = streamReader.readLine()) != null) {
-					responseStrBuilder.append(inputStr);
-				}
-
-				jsonObject = new JSONObject(responseStrBuilder.toString());
-				return true;
-
-			}
-		} catch (UnsupportedEncodingException ex) {
-
-			log.error(ex.getLocalizedMessage());
-
-		} catch (IOException ex) {
-
-			log.error(ex.getLocalizedMessage());
-
-		} catch (Exception ex) {
-
-			log.error(ex.getLocalizedMessage());
-
-		}
-		return false;
-	}
+	
 
 
 }

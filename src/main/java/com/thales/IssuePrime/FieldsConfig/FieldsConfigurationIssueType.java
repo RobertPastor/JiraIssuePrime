@@ -1,5 +1,10 @@
 package com.thales.IssuePrime.FieldsConfig;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,7 +20,8 @@ public class FieldsConfigurationIssueType {
 
 	private static final Logger log = LoggerFactory.getLogger(FieldsConfigurationIssueType.class);
 
-
+	protected JSONObject jsonObject = null;
+	
 	/**
 	 * "issuetypes": [
                 {
@@ -40,11 +46,62 @@ public class FieldsConfigurationIssueType {
 	 */
 
 
-	public FieldsConfigurationIssueType() {
+	protected FieldsConfigurationIssueType() {
 
-
+		init();
 	}
 
+	
+	/**
+	 * loads the JSON file containing the fields configuration
+	 * @param projectKey
+	 * @return
+	 */
+	private boolean init() {
+
+		//String jsonFileName = projectKey + "-fields.json";
+		String jsonFileName = "config/rgswebsrv22-fields.json";
+
+		InputStream inputStream = null;
+		jsonObject = null;
+		try {
+			inputStream = FieldsConfiguration.class.getClassLoader().getResourceAsStream(jsonFileName);
+
+			if (inputStream != null) {
+				BufferedReader streamReader = new BufferedReader( new InputStreamReader(inputStream, "UTF-8"));
+
+				StringBuilder responseStrBuilder = new StringBuilder();
+
+				String inputStr;
+				while ((inputStr = streamReader.readLine()) != null) {
+					responseStrBuilder.append(inputStr);
+				}
+
+				jsonObject = new JSONObject(responseStrBuilder.toString());
+				return true;
+
+			}
+		} catch (UnsupportedEncodingException ex) {
+
+			log.error(ex.getLocalizedMessage());
+
+		} catch (IOException ex) {
+
+			log.error(ex.getLocalizedMessage());
+
+		} catch (Exception ex) {
+
+			log.error(ex.getLocalizedMessage());
+
+		}
+		return false;
+	}
+	
+	/**
+	 * list of mandatory fields
+	 * @param issueType
+	 * @return
+	 */
 	public static List<Map<String,Boolean>> getMandatoryFields(final JSONObject issueType ) {
 
 		log.debug("FieldsConfigurationIssueType - getMandatoryFields");
@@ -79,6 +136,12 @@ public class FieldsConfigurationIssueType {
 		return fieldsList;
 	}
 
+	/**
+	 * 
+	 * @param issueTypeJsonObj
+	 * @param customFieldId
+	 * @return
+	 */
 	public static boolean hasCustomFieldByID(final JSONObject issueTypeJsonObj, final String customFieldId) {
 
 
