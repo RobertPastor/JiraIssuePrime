@@ -1,15 +1,24 @@
 package com.thales.CRUD;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -26,12 +35,23 @@ import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.datetime.DateTimeFormatter;
+import com.atlassian.jira.datetime.DateTimeFormatterFactory;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
+import com.atlassian.jira.issue.ModifiedValue;
 import com.atlassian.jira.issue.MutableIssue;
+import com.atlassian.jira.issue.customfields.DefaultCustomFieldValueProvider;
+import com.atlassian.jira.issue.customfields.manager.OptionsManager;
+import com.atlassian.jira.issue.customfields.option.Option;
+import com.atlassian.jira.issue.customfields.option.Options;
 import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
+import com.atlassian.jira.issue.transport.FieldValuesHolder;
+import com.atlassian.jira.issue.util.DefaultIssueChangeHolder;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.security.JiraAuthenticationContext;
@@ -55,6 +75,7 @@ public class IssueCRUD extends HttpServlet {
 
 	private static final Logger log = LoggerFactory.getLogger(IssueCRUD.class);
 
+
 	@JiraImport
 	private IssueService issueService;
 	@JiraImport
@@ -69,6 +90,12 @@ public class IssueCRUD extends HttpServlet {
 	private ConstantsManager constantsManager;
 	@JiraImport
 	private CustomFieldManager customFieldManager;
+	@JiraImport
+	private OptionsManager optionsManager;
+	@JiraImport
+	private FieldLayoutManager fieldLayoutManager;
+	@JiraImport
+	private DateTimeFormatterFactory dateTimeFormatterFactory; 
 
 
 	private static final String ACTION_TYPE_REQUEST_PARAMETER = "actionType";
@@ -309,7 +336,13 @@ public class IssueCRUD extends HttpServlet {
 		}
 	}
 
-	private IssueInputParameters setCustomFieldsValues(final Issue sourceIssue, IssueInputParameters issueInputParameters) {
+	/**
+	 * ste custom field depending upon its type (Date, Long, Select, etc.)
+	 * @param customFieldId
+	 * @param issueInputParameters
+	 * @param sourceIssue
+	 */
+	private CustomField setCustomFieldOptionsValues(final String customFieldId ,  final Issue sourceIssue) {
 		
 		/**
 		 * Detection date is required - customfield_9991
@@ -328,16 +361,23 @@ public class IssueCRUD extends HttpServlet {
 		List<String> customFieldNamelist = Arrays.asList("customfield_9991", "versions", 
 				"customfield_9988", "customfield_9989", "customfield_11202", "customfield_9994", "customfield_11203");
 		
-		/*
-		 * Iterator<String> iter = customFieldNamelist.iterator();
-		while (iter.hasNext()) {
-			String customFieldName = iter.next();
-			CustomField customField = customFieldManager.getCustomFieldObject(customFieldName);
-			log.debug("Custom field = " + customField.getName() + " - " + customField.getNameKey());
-		}
-		*/
-		return issueInputParameters;
-		//List<CustomField> customFieldsList = customFieldManager.getCustomFieldObjects(sourceIssue);
+		// et the custom field object from the custom field id (customfield_9988 - Reproducibility)
+		CustomField customField = customFieldManager.getCustomFieldObject(customFieldId);
+
+		Options options = optionsManager.getOptions(customField.getRelevantConfig(sourceIssue));
+		//options.getOptionById(arg0)
+		
+		Object value = sourceIssue.getCustomFieldValue(customField);
+		// here it is the option Id as provided by JIRA
+		//Option newOption = options.getOptionById(newOptionId);
+
+		// modified value - old value , new value
+		ModifiedValue modifiedValue = new ModifiedValue(null, sourceIssue.getCustomFieldValue(customField) );
+
+		FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout().getFieldLayoutItem(customField);
+		customField.updateValue(fieldLayoutItem, sourceIssue, modifiedValue, new DefaultIssueChangeHolder());
+		
+		return customField;
 		
 	}
 
@@ -385,11 +425,8 @@ public class IssueCRUD extends HttpServlet {
 						.setProjectId(project.getId())
 						.setIssueTypeId(problemReportIssueType.getId());
 						
-						issueInputParameters.setSkipScreenCheck(true);
-						issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
-						
 						// set affected versions
-						if (sourceIssue.getAffectedVersions().isEmpty() == false ) {
+						if ( ! sourceIssue.getAffectedVersions().isEmpty() ) {
 							Collection<Version> affectedVersions = sourceIssue.getAffectedVersions();
 							Iterator<Version> iter = affectedVersions.iterator();
 							while (iter.hasNext()) {
@@ -399,11 +436,19 @@ public class IssueCRUD extends HttpServlet {
 							}
 						}
 						
-						// Reproducibility - customfield_9988 is an option field.
-						//Object value = sourceIssue.getCustomFieldValue(customFieldManager.getCustomFieldObject("customfield_9988"));
-						//log.debug("Reproducibility= " + value.toString());
+						// do not perform screen check
+						//issueInputParameters.setSkipScreenCheck(true);
+						//issueInputParameters.setApplyDefaultValuesWhenParameterNotProvided(true);
 						
-						//issueInputParameters.addCustomFieldValue("customfield_9988",value.toString());
+						//DateTimeFormatter dateTimeFormatter = dateTimeFormatterFactory.formatter().forLoggedInUser();
+						
+						// Detection date -  customfield_9991
+						//issueInputParameters.addCustomFieldValue("customfield_9991", dateTimeFormatter.withZone(TimeZone.getTimeZone("France/Paris")).format( new Date() ) ) ;
+						
+						// set Reproducibility - customfield_9988
+						//CustomField customField = setCustomFieldOptionsValues("customfield_9988", sourceIssue);						
+						//issueInputParameters.addCustomFieldValue(customField.getIdAsLong(), (String)customField.getValue(sourceIssue));
+						
 						
 						if (sourceIssue.getSecurityLevelId() != null) {
 							issueInputParameters.setSecurityLevelId(sourceIssue.getSecurityLevelId());
@@ -427,8 +472,7 @@ public class IssueCRUD extends HttpServlet {
 						}
 
 						IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
-
-						if (result.getErrorCollection().hasAnyErrors()) {
+						if (!result.isValid() || result.getErrorCollection().hasAnyErrors()) {
 
 							log.debug("there were errors - during validate create - " + result.getErrorCollection().getErrors().toString());
 
@@ -439,7 +483,7 @@ public class IssueCRUD extends HttpServlet {
 						} else {
 
 							IssueResult issueResult = issueService.create(user, result);
-							if (issueResult.getErrorCollection().hasAnyErrors()) {
+							if (!issueResult.isValid() || issueResult.getErrorCollection().hasAnyErrors()) {
 
 								log.debug("there were errors - during create - " + issueResult.getErrorCollection().getErrors().toString());
 

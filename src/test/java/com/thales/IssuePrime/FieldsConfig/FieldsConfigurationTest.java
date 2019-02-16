@@ -76,8 +76,5 @@ public class FieldsConfigurationTest {
 		issueTypeName = "Problem Report";
 		String customFieldId = "customfield_9988";
 		assertTrue("custom field exists = ", fieldsConfiguration.hasCustomField(projectKey, issueTypeName, customFieldId));
-		
-		String customClassName = "com.atlassian.jira.plugin.system.customfieldtypes:select";
-		assertTrue("custom fields with schema class = " , fieldsConfiguration.getCustomFieldsFromClass(projectKey, issueTypeName, customClassName).size()>0 );
 	}
 }
