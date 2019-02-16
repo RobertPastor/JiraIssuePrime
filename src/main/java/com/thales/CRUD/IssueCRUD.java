@@ -569,7 +569,7 @@ public class IssueCRUD extends HttpServlet {
 
 					if(taskIssueType == null) {
 
-						context.put(ERRORS, Collections.singletonList("Can't find Task issue type or Tâche issue type -> will try to create only these issue types"));
+						context.put(ERRORS, Collections.singletonList("Can't find Task issue type or Tâche issue type -> expected to create only these issue types"));
 						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
 
 					} else {
@@ -624,7 +624,10 @@ public class IssueCRUD extends HttpServlet {
 							}
 						}
 					}
-				} 
+				} else {
+					context.put(ERRORS, Collections.singletonList("Tâche found where Task was expected"));
+					templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				}
 			}
 
 		} catch (Exception ex) {
