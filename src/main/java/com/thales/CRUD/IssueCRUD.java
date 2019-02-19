@@ -32,14 +32,18 @@ import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.IssueService.IssueResult;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.bc.project.ProjectService;
+import com.atlassian.jira.bc.project.component.ProjectComponentManager;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.ConstantsManager;
+import com.atlassian.jira.config.PriorityManager;
 import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeFormatterFactory;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
+import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.ModifiedValue;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.customfields.DefaultCustomFieldValueProvider;
@@ -47,20 +51,32 @@ import com.atlassian.jira.issue.customfields.manager.OptionsManager;
 import com.atlassian.jira.issue.customfields.option.Option;
 import com.atlassian.jira.issue.customfields.option.Options;
 import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
+import com.atlassian.jira.issue.label.LabelManager;
+import com.atlassian.jira.issue.link.IssueLinkManager;
+import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
 import com.atlassian.jira.issue.transport.FieldValuesHolder;
 import com.atlassian.jira.issue.util.DefaultIssueChangeHolder;
+import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.project.Project;
+import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.project.version.Version;
+import com.atlassian.jira.project.version.VersionManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
+import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.user.util.UserManager;
+import com.atlassian.jira.util.I18nHelper.BeanFactory;
+import com.atlassian.jira.web.FieldVisibilityManager;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.JiraImport;
 import com.atlassian.templaterenderer.RenderingException;
 import com.atlassian.templaterenderer.TemplateRenderer;
-
+import com.googlecode.jsu.util.FieldCollectionsUtils;
+import com.googlecode.jsu.util.WorkflowUtils;
 import com.thales.IssuePrime.FieldsConfig.FieldsConfiguration;
 import com.thales.IssuePrime.Helper.IssueHelper;
 import com.thales.IssuePrime.Helper.IssueTypeHelper;
@@ -73,7 +89,7 @@ public class IssueCRUD extends HttpServlet {
 	 */
 	private static final long serialVersionUID = 4439147766945679620L;
 
-	private static final Logger log = LoggerFactory.getLogger(IssueCRUD.class);
+	private static final Logger log = LoggerFactory.getLogger(FieldsConfiguration.class);
 
 
 	@JiraImport
@@ -96,6 +112,36 @@ public class IssueCRUD extends HttpServlet {
 	private FieldLayoutManager fieldLayoutManager;
 	@JiraImport
 	private DateTimeFormatterFactory dateTimeFormatterFactory; 
+	@JiraImport
+	private FieldManager fieldManager;
+	@JiraImport
+	private IssueManager issueManager;
+	@JiraImport
+	private ProjectComponentManager projectComponentManager;
+	@JiraImport
+	private VersionManager versionManager;
+	@JiraImport
+    private IssueSecurityLevelManager issueSecurityLevelManager;
+	@JiraImport
+	private ApplicationProperties applicationProperties;
+	
+	@JiraImport
+	private IssueLinkManager issueLinkManager;
+	@JiraImport
+	private UserManager userManager;
+    //CrowdService crowdService, 
+	@JiraImport
+	private ProjectManager projectManager;
+	@JiraImport
+	private PriorityManager priorityManager;
+	@JiraImport
+	private LabelManager labelManager;
+	@JiraImport
+	private ProjectRoleManager projectRoleManager;
+	@JiraImport
+	private WatcherManager watcherManager;
+	@JiraImport
+	private FieldVisibilityManager fieldVisibilityManager;
 
 
 	private static final String ACTION_TYPE_REQUEST_PARAMETER = "actionType";
@@ -588,6 +634,24 @@ public class IssueCRUD extends HttpServlet {
 						issueInputParameters.setReporterId(user.getName());
 						issueInputParameters.setAssigneeId(user.getName());
 					}
+					
+					BeanFactory beanFactory = ComponentAccessor.getI18nHelperFactory();
+					DateTimeFormatter dateTimeFormatter = dateTimeFormatterFactory.formatter().forLoggedInUser();
+
+					FieldCollectionsUtils fieldCollectionsUtils = new FieldCollectionsUtils(beanFactory, applicationProperties, 
+							dateTimeFormatter, fieldManager, fieldLayoutManager, customFieldManager, fieldVisibilityManager);
+					
+					WorkflowUtils workflowUtils = new WorkflowUtils(fieldManager, issueManager, projectComponentManager,
+							versionManager, issueSecurityLevelManager, applicationProperties, fieldCollectionsUtils, issueLinkManager, userManager, 
+							optionsManager, projectManager, priorityManager, labelManager, projectRoleManager, watcherManager);
+					
+					CustomField customField = customFieldManager.getCustomFieldObject("com.example.plugins.tutorial.customfields.jira-custom-field-example:admintextfield");
+					if (fieldCollectionsUtils.isIssueHasField(sourceIssue, customField) ) {
+						
+						log.info("custom field found");
+					}
+					
+					//==================
 
 					IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
 

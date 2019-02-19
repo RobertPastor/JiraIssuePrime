@@ -101,8 +101,8 @@ public class FieldCollectionsUtils {
         while(it.hasNext()) {
             Field f = it.next();
             if(f instanceof CustomField) {
-                //if(((CustomField)f).getCustomFieldType() instanceof ReadOnlyCFType) {
-            	if (  ((CustomField)f) .getCustomFieldType() instanceof  com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType) {
+                if(((CustomField)f).getCustomFieldType() instanceof ReadOnlyCFType) {
+            	//if (  ((CustomField)f) .getCustomFieldType() instanceof  com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType) {
                     it.remove();
                 }
             }
@@ -131,8 +131,8 @@ public class FieldCollectionsUtils {
         for (CustomField cfDate : fields) {
             CustomFieldType customFieldType = cfDate.getCustomFieldType();
 
-            if (customFieldType instanceof com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType) {
-            //if ((customFieldType instanceof DateCFType) || (customFieldType instanceof DateTimeCFType)){
+            //if (customFieldType instanceof com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType) {
+            if ((customFieldType instanceof DateCFType) || (customFieldType instanceof DateTimeCFType)){
                 allDateFields.add(cfDate);
             }
         }
@@ -163,9 +163,9 @@ public class FieldCollectionsUtils {
         for (CustomField cf : fields) {
             CustomFieldType customFieldType = cf.getCustomFieldType();
 
-            //if (customFieldType instanceof SelectCFType
-            //        || customFieldType instanceof MultiSelectCFType){
-            if (customFieldType instanceof com.atlassian.jira.issue.customfields.impl.AbstractMultiCFType<?>) {
+            if (customFieldType instanceof SelectCFType
+                    || customFieldType instanceof MultiSelectCFType){
+            //if (customFieldType instanceof com.atlassian.jira.issue.customfields.impl.AbstractMultiCFType<?>) {
                 allSelectFields.add(cf);
             }
         }
@@ -181,11 +181,11 @@ public class FieldCollectionsUtils {
         for (CustomField cf : fields) {
             CustomFieldType customFieldType = cf.getCustomFieldType();
 
-            //if (customFieldType instanceof TextAreaCFType
-            //        || customFieldType instanceof RenderableTextCFType
-            //        || customFieldType instanceof NumberCFType
-            //        || customFieldType instanceof URLCFType){
-            if (customFieldType instanceof com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType) {
+            if (customFieldType instanceof TextAreaCFType
+                    || customFieldType instanceof RenderableTextCFType
+                    || customFieldType instanceof NumberCFType
+                    || customFieldType instanceof URLCFType){
+            //if (customFieldType instanceof com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType) {
                 allTextFields.add(cf);
             }
         }
@@ -210,8 +210,8 @@ public class FieldCollectionsUtils {
         if (fieldManager.isCustomField(field)) {
             CustomFieldType type = ((CustomField) field).getCustomFieldType();
 
-            //if ((type instanceof ReadOnlyCFType) || (type instanceof ImportIdLinkCFType)) {
-            if ( type instanceof com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType) {
+            if ((type instanceof ReadOnlyCFType) || (type instanceof ImportIdLinkCFType)) {
+            //if ( type instanceof com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType) {
                 return false;
             }
         }
