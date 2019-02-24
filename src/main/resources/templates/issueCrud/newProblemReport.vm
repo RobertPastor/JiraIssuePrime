@@ -1,8 +1,9 @@
 <html>
 <head>
-	<!--   <link rel="stylesheet" type="text/css" href="css/myPlugin.css"  /> -->
-	<!--  $webResourceManager.requireResource("myPlugin:myPlugin-resources") -->
-	<!--  $webResourceManager.requireResourcesForContext("myPlugin") -->
+
+	  $webResourceManager.requireResourcesForContext("JiraIssuePrimePlugin") 
+
+	<meta name="decorator" content="atl.general">
 
     <title>Create a Problem Report </title>
     

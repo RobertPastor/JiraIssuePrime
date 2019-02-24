@@ -1,9 +1,10 @@
 
 <html>
 <head>
-	<!--   <link rel="stylesheet" type="text/css" href="css/myPlugin.css"  /> -->
-	<!--  $webResourceManager.requireResource("myPlugin:myPlugin-resources") -->
-	<!--  $webResourceManager.requireResourcesForContext("myPlugin") -->
+
+	 $webResourceManager.requireResourcesForContext("JiraIssuePrimePlugin") 
+	
+	<meta name="decorator" content="atl.general">
 
     <title>Create an Issue </title>
     
@@ -19,138 +20,162 @@
 
 </head>
 <body class="page-type-admin">
-<div class="content-container">
-
-    <div class="content-body">
-    
-        <h1>Clone a Task</h1>
-        
-        <form method="post" id="h" action="issuePrime" class="aui">
-        
-        	<div class="create-issue-panel">
-
-            	<h2>Clone a task in the target project with key=TUTORIAL</h2>
-            
-            	<!--  input with pre defined names to be used in the POST servlet -->
-            	<label for="actionTypeId"> Action Type </label>
-            	<input id="actionTypeId" name="actionType" class="text long-field" type="text" value="$actionType" readonly>
-            	
-	            <label for="issueTypeId"> Issue Type </label>
-            	<input id="issueTypeId" name="issueType" class="text long-field" type="text" value="$issueType" readonly>
-            	
-            	<label for="issueKeyId"> Issue Key </label>
-            	<input id="issueKeyId" name="issueKey" class="text long-field" type="text" value="$issueKey" readonly>
-            
-                <div class="field-group">
-                    <label for="h-fsummary">
-                        Summary
-                        <span class="aui-icon icon-required"></span>
-                        <span class="content">required</span>
-                    </label>
-                    <input id="h-fsummary" class="text long-field" type="text" name="summary" value="$issue.getSummary()">
-                </div>
-                
-                <div class="field-group">
-                    <label for="h-fdescription">
-                        Description
-                        <span class="aui-icon icon-required"></span>
-                        <span class="content">required</span>
-                    </label>
-                    <textarea id="h-fdescription" name="description">$issue.getDescription()</textarea>
-                </div>
-                
-                <!-- REQUIREMENT : if there is no priority set then - do not show an erroneous message -->
-                #if ($issue.getPriority()) 
-                
+	<div class="content-container">
+	
+	    <div class="content-body">
+	    
+	        <h1>Clone a Task</h1>
+	        
+	        <form method="post" id="h" action="issuePrime" class="aui">
+	        
+	        	<div class="create-issue-panel">
+	
+	            	<h2>Clone a task in the target project with key=TUTORIAL</h2>
+	            	
+	            	<!--  input with pre defined names to be used in the POST servlet -->
+	            	<table border="1px" class="aui">
+	            		<thead>
+	            			<tr>
+	            				<th>
+	            					<div>Action Type</div>
+	            				</th>
+	            				<th>
+	            					<div>Issue Type</div>
+	            				</th>
+	            				<th>
+	            					<div>Issue Key</div>
+	            				</th>
+	            			</tr>
+	            		</thead>
+	            		<tbody>
+	            			<tr>
+	            				<td>
+	            					<input id="actionTypeId" name="actionType" class="text long-field" type="text" value="$actionType" readonly>
+	            				</td>
+	            				<td>
+	            					<input id="issueTypeId" name="issueType" class="text long-field" type="text" value="$issueType" readonly>
+	            				</td>
+	            				<td>
+	            					<input id="issueKeyId" name="issueKey" class="text long-field" type="text" value="$issueKey" readonly>
+	            				</td>
+	            			</tr>
+	            		
+	            		</tbody>
+	            	</table>
+	      
+	            
 	                <div class="field-group">
-	                    <label for="h-priority">
-	                        Priority
+	                    <label for="h-fsummary">
+	                        Summary
 	                        <span class="aui-icon icon-required"></span>
 	                        <span class="content">required</span>
 	                    </label>
-	                    <textarea id="h-priority" name="priority">$issue.getPriority().getName()</textarea>
+	                    <input id="h-fsummary" class="text long-field" type="text" name="summary" value="$issue.getSummary()">
 	                </div>
 	                
-	            #end
-                
-                <div class="field-group">
-                    <label for="h-assignee">
-                        Assignee
-                        <span class="aui-icon icon-required"></span>
-                        <span class="content">required</span>
-                    </label>
-                    <textarea id="h-assignee" name="assignee">$issue.getAssigneeId()</textarea>
-                </div>
-                
-                <div class="field-group">
-                    <label for="h-reporter">
-                        Reporter
-                        <span class="aui-icon icon-required"></span>
-                        <span class="content">required</span>
-                    </label>
-                    <textarea id="h-reporter" name="reporter">$issue.getReporterId()</textarea>
-                </div>
-                
-                
-                <div class="buttons">
-                    <input class="button" type="submit" value="Create"> 
-                    <a href="issuePrime">Cancel</a>
-                </div>
-            </form>
-        </div>
-        
-        
-        <div>
-        
-        
-	        <table border="1px" class="aui">
-	        	<thead>
-	            		<tr>
-		            		<th>
-		            			<div>Field Name</div>
-		            		</th>
-		            		<th>
-		            			<div>Required</div>
-		            		</th>
-		            	</tr>
-		       	</thead>
-	            <tbody>
-	            	
-		        	#if ($fields)
-		        	
-		        		#foreach($field in $fields)
-		        	
-			        	<tr>
-			            	<td>
-			            			<div readonly> 
-				            			<p class="title">
-					                        <span class="aui-icon"></span>
-					                        <strong>$field</strong>
-					                    </p>
-									 </div>
-			            	</td>
-				            
-				            <td>
-			            			<div readonly> 
-				            			<p class="title">
-					                        <span class="aui-icon"></span>
-					                        <strong>required is True</strong>
-					                    </p>
+	                <div class="field-group">
+	                    <label for="h-fdescription">
+	                        Description
+	                        <span class="aui-icon icon-required"></span>
+	                        <span class="content">required</span>
+	                    </label>
+	                    <textarea id="h-fdescription" name="description">$issue.getDescription()</textarea>
+	                </div>
+	                
+	                <!-- REQUIREMENT : if there is no priority set then - do not show an erroneous message -->
+	                #if ($issue.getPriority()) 
+	                
+		                <div class="field-group">
+		                    <label for="h-priority">
+		                        Priority
+		                        <span class="aui-icon icon-required"></span>
+		                        <span class="content">required</span>
+		                    </label>
+		                    <textarea id="h-priority" name="priority">$issue.getPriority().getName()</textarea>
+		                </div>
+		                
+		            #end
+	                
+	                #if ($issue.getAssigneeId()) 
+	                <div class="field-group">
+	                    <label for="h-assignee">
+	                        Assignee
+	                        <span class="aui-icon icon-required"></span>
+	                        <span class="content">required</span>
+	                    </label>
+	                    <textarea id="h-assignee" name="assignee">$issue.getAssigneeId()</textarea>
+	                </div>
+	            	#end
+	            
+	          		<!--  There is always a reporter -->
+	                <div class="field-group">
+	                    <label for="h-reporter">
+	                        Reporter
+	                        <span class="aui-icon icon-required"></span>
+	                        <span class="content">required</span>
+	                    </label>
+	                    <textarea id="h-reporter" name="reporter">$issue.getReporterId()</textarea>
+	                </div>
+	                
+	                
+	                <div class="buttons">
+	                    <input class="button" type="submit" value="Create" title="click me to create a Primed Issue"> 
+	                    <a href="issuePrime" title="click me to cancel the operation">Cancel</a>
+	                </div>
+	            </form>
+	        </div>
+	        
+	        
+	        <div>
+	        
+		        <table border="1px" class="aui">
+		        	<thead>
+		            		<tr>
+			            		<th>
+			            			<div>Field Name</div>
+			            		</th>
+			            		<th>
+			            			<div>Required</div>
+			            		</th>
+			            	</tr>
+			       	</thead>
+		            <tbody>
+		            	
+			        	#if ($fields)
+			        	
+			        		#foreach($field in $fields)
+			        	
+				        	<tr>
+				            	<td>
+				            			<div readonly> 
+					            			<p class="title">
+						                        <span class="aui-icon"></span>
+						                        <strong>$field</strong>
+						                    </p>
+										 </div>
+				            	</td>
+					            
+					            <td>
+				            			<div readonly> 
+					            			<p class="title">
+						                        <span class="aui-icon"></span>
+						                        <strong>True</strong>
+						                    </p>
+		
+										 </div>
+				            	</td>      
+					       	</tr>
+					       	
+					       	#end
+			        	#end
+			        
+					</tbody>
+				</table>										
+	        
+	        </div>
+	        
+	    </div>
 	
-									 </div>
-			            	</td>      
-				       	</tr>
-				       	
-				       	#end
-		        	#end
-		        
-				</tbody>
-			</table>										
-        
-        </div>
-        
-    </div>
-
-</div>
+	</div>
 </body>
 </html>

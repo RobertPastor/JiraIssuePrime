@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <atlassian-plugin key="${atlassian.plugin.key}" name="${project.name}" plugins-version="2">
+
   <plugin-info>
     <description>${project.description}</description>
     <version>${project.version}</version>
@@ -8,50 +9,29 @@
     <param name="plugin-icon">images/pluginIcon.png</param>
     <param name="plugin-logo">images/pluginLogo.png</param>
   </plugin-info>
+  
   <!-- add our i18n resource -->
-  <resource type="i18n" name="i18n" location="myPlugin"/>
-  <!-- add our web resources -->
-  <web-resource key="my_plugin-resources" name="my_plugin Web Resources">
+  <resource type="i18n" name="i18n" location="JiraIssuePrimePlugin"/>
+  
+  <!-- add your web resources -->
+  <web-resource key="JiraIssuePrimePlugin-resources" name="JiraIssuePrimePlugin Web Resources">
     <dependency>com.atlassian.auiplugin:ajs</dependency>
-    <dependency>jira.webresources:jira-global</dependency>
-    <dependency>com.atlassian.auiplugin:aui-experimental-iconfont</dependency>
-    <dependency>com.atlassian.auiplugin:aui-table-sortable</dependency>
-    <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
-    <dependency>com.atlassian.auiplugin:aui-select2</dependency>
-    <dependency>com.atlassian.auiplugin:aui-toggle</dependency>
-    <dependency>com.atlassian.auiplugin:aui-flag</dependency>
-    <dependency>com.atlassian.auiplugin:aui-help</dependency>
-    <dependency>com.atlassian.auiplugin:dialog2</dependency>
-    <dependency>com.atlassian.auiplugin:aui-dropdown2</dependency>
-    <dependency>com.atlassian.auiplugin:java.lang.String</dependency>
-    <resource type="download" name="myPlugin.css" location="css/myPlugin.css"/>
-    <resource type="download" name="my_plugin.js" location="js/myPlugin.js">
-      <property key="content-type" value="text/javascript"/>
-    </resource>
+    <resource type="download" name="JiraIssuePrimePlugin.css" location="/css/JiraIssuePrimePlugin.css"/>
+    <resource type="download" name="JiraIssuePrimePlugin.js" location="/js/JiraIssuePrimePlugin.js"/>
     <resource type="download" name="images/" location="/images"/>
-    <context>myPlugin</context>
+    <context>JiraIssuePrimePlugin</context>
   </web-resource>
-  <web-resource key="myPlugin-resources" name="myPlugin Web Resources">
-    <dependency>com.atlassian.auiplugin:ajs</dependency>
-    <resource type="download" name="myPlugin.css" location="css/myPlugin.css"/>
-    <resource type="download" name="myPlugin.js" location="js/myPlugin.js"/>
-          <property key="content-type" value="text/javascript"/>
-    
-    <resource type="download" name="images/" location="/images"/>
-    <context>myPlugin</context>
-  </web-resource>
-  <issue-tabpanel key="issue-prime-tab-panel" name="IssuePrimeTabPanelModule" i18n-name-key="issue-prime-tab-panel.name" class="com.thales.IssuePrimeUI.IssuePrimeTabPanel">
-    <description key="issue-prime-tab-panel.description">The Issue Prime Tab Panel Plugin</description>
-    <label key="issue-prime-tab-panel.label">Prime Issue</label>
-    <order>10</order>
-    <resource type="velocity" name="view" location="templates/tabpanels/issue-prime-tab-panel.vm"/>
-  </issue-tabpanel>
-  <servlet name="ProjectsList" i18n-name-key="projects-list.name" key="projects-list-key" class="com.thales.Prime.ProjectsList">
-    <description key="projects-list.description">Get the list of Projects</description>
-    <url-pattern>/projectslist</url-pattern>
-  </servlet>
-  <servlet name="Issue CRUD" i18n-name-key="issue-crud.name" key="issue-crud" class="com.thales.CRUD.IssueCRUD">
+  
+  <servlet name="Issue CRUD" i18n-name-key="issue-crud.name" key="issue-crud" class="com.thales.IssuePrime.servlet.IssueCRUD">
     <description key="issue-crud.description">The Issue CRUD Plugin</description>
     <url-pattern>/issuePrime</url-pattern>
   </servlet>
+  
+  	<issue-tabpanel key="custom-issue-tabpanel" name="Custom Tab Panel" class="com.thales.IssuePrime.IssuePrimeTabPanel.IssuePrimeTabPanel">
+  	    <description key="issue-prime-tab-panel.description">The Issue Prime Tab Panel Plugin</description>
+  	    <label>Issue Prime</label>
+  		<supports-ajax-load>true</supports-ajax-load>
+  		<resource type="velocity" name="view" location="templates/tabpanels/issue-prime-tab-panel.vm"/>  		
+	</issue-tabpanel>
+	
 </atlassian-plugin>

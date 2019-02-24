@@ -39,12 +39,12 @@
         </dependency>
         -->
         
+        <!-- Uses the application's SAL instead of bundling it into the plugin. -->
         <dependency>
             <groupId>com.atlassian.sal</groupId>
             <artifactId>sal-api</artifactId>
             <version>2.0.17</version>
             <scope>provided</scope>
-            <!-- Uses the application's SAL instead of bundling it into the plugin. -->
         </dependency>
         
         <dependency>
