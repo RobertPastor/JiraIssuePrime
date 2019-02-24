@@ -57,7 +57,7 @@ public class IssueLinkHelper {
 
 			} catch (Exception e) 
 			{ 
-				e.printStackTrace();
+				log.error(e.getLocalizedMessage());
 			}
 		} else {
 			log.warn("Linking is not enabled");
