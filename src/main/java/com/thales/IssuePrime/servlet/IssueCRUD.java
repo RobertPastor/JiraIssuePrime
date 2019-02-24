@@ -29,7 +29,9 @@ import com.atlassian.query.Query;
 import com.atlassian.templaterenderer.RenderingException;
 import com.atlassian.templaterenderer.TemplateRenderer;
 import com.thales.IssuePrime.FieldsConfig.FieldsConfiguration;
+import com.thales.IssuePrime.Helper.AttachmentHelper;
 import com.thales.IssuePrime.Helper.IssueHelper;
+import com.thales.IssuePrime.Helper.IssueLinkHelper;
 import com.thales.IssuePrime.Helper.IssueTypeHelper;
 import com.thales.IssuePrime.Helper.ProjectHelper;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
@@ -499,7 +501,6 @@ public class IssueCRUD extends HttpServlet {
 					}
 
 					IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
-
 					if (! result.isValid() || result.getErrorCollection().hasAnyErrors()) {
 
 						context.put(ERRORS, result.getErrorCollection().getErrors());
@@ -519,14 +520,21 @@ public class IssueCRUD extends HttpServlet {
 							templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
 
 						} else {
-
-							MutableIssue issue = issueResult.getIssue();
-
+							// the newly created issue
+							MutableIssue newIssue = issueResult.getIssue();
+							
+							try {
+								AttachmentHelper.copyAttachments(sourceIssue, newIssue);
+								IssueLinkHelper.createLink(sourceIssue, newIssue);
+							} catch (Exception ex) {
+								log.error(ex.getLocalizedMessage());
+							}
+							
 							String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
 
-							context.put(RESULTS, Collections.singletonList("Issue " + issue.getKey() + " correctly created"));
-							context.put("issueKey", issue.getKey() );
-							context.put("href", baseURL + "/browse/" + issue.getKey() );
+							context.put(RESULTS, Collections.singletonList("Issue " + newIssue.getKey() + " correctly created"));
+							context.put("issueKey", newIssue.getKey() );
+							context.put("href", baseURL + "/browse/" + newIssue.getKey() );
 							templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
 						}
 					}
