@@ -111,6 +111,7 @@ public class IssueInputParametersHelper {
 			issueInputParameters.setReporterId(sourceIssue.getReporterId());
 		}
 		if (sourceIssue.getAssignee() != null) {
+			// do not affect assignee when cloning from IRF to PCR
 			issueInputParameters.setAssigneeId(sourceIssue.getAssigneeId());
 		}
 		

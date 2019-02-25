@@ -403,12 +403,22 @@ public class IssueCRUD extends HttpServlet {
 								if (newIssue != null ) {
 									
 									try {
+										newIssue.setLabels(sourceIssue.getLabels());
+									} catch (Exception ex) {
+										log.error(ex.getLocalizedMessage());
+									}
+									try {
 										AttachmentHelper.copyAttachments(sourceIssue, newIssue);
 									} catch (Exception ex) {
 										log.error(ex.getLocalizedMessage());
 									}
 									try {
 										IssueLinkHelper.createLink(sourceIssue, newIssue);
+									} catch (Exception ex) {
+										log.error(ex.getLocalizedMessage());
+									}
+									try {
+										CommentsHelper.copyComments(sourceIssue, newIssue);
 									} catch (Exception ex) {
 										log.error(ex.getLocalizedMessage());
 									}
@@ -519,6 +529,12 @@ public class IssueCRUD extends HttpServlet {
 						} else {
 							// the newly created issue
 							MutableIssue newIssue = issueResult.getIssue();
+							
+							try {
+								newIssue.setLabels(sourceIssue.getLabels());
+							} catch (Exception ex) {
+								log.error(ex.getLocalizedMessage());
+							}
 							
 							try {
 								AttachmentHelper.copyAttachments(sourceIssue, newIssue);
