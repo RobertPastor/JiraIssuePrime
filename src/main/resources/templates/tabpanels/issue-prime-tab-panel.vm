@@ -28,7 +28,13 @@
 	            			<div>Current User</div>
 	            		</th>
 	            		<th>
+	            			<div>Fields Configuration is available </div>
+	            		</th>
+	            		<th>
 	            			<div>Issue Type Fields Configuration is available </div>
+	            		</th>
+	            		<th>
+	            			<div>Project Fields Configuration is available </div>
 	            		</th>
 	            	</tr>
             	</thead>
@@ -51,8 +57,12 @@
 	            		</td>
 	            		<td>
 	            			<div readonly> $fieldsConfig </div>
-	            			<div readonly> $projectFieldsConfig </div>
+	            		</td>
+	            		<td>
 	            			<div readonly> $issueTypeFieldsConfig </div>
+	            		</td>
+	            		<td>
+	            			<div readonly> $projectFieldsConfig </div>
 	            		</td>
 	            	</tr>
             	</tbody>

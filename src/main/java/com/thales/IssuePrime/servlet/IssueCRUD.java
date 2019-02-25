@@ -343,6 +343,8 @@ public class IssueCRUD extends HttpServlet {
 
 		ApplicationUser user = authenticationContext.getLoggedInUser();
 		log.debug("issue key= " + issueKey);
+		
+		// context used for the velocity templates
 		Map<String, Object> context = new HashMap<>();
 
 		try {
@@ -461,7 +463,7 @@ public class IssueCRUD extends HttpServlet {
 	}
 
 	/**
-	 * Create a task in TUTORIAL from a task in the input issue
+	 * Create a task in TUTORIAL from a task as the input issue
 	 * @param req
 	 * @param resp
 	 * @param issueKey 
@@ -470,6 +472,7 @@ public class IssueCRUD extends HttpServlet {
 	private void handleTaskCreation(HttpServletRequest req, HttpServletResponse resp, String issueKey) throws IOException {
 
 		ApplicationUser user = authenticationContext.getLoggedInUser();
+		// hard coded target project key
 		final String targetPrimeProjectKey = "TUTORIAL";
 
 		Map<String, Object> context = new HashMap<>();

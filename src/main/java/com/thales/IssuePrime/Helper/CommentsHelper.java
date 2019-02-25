@@ -33,7 +33,7 @@ public class CommentsHelper {
 			//log.debug("Project Key= " + sourceProjectKey);
 
 			try {
-
+				// create comment in the target issue
 				commentManager.create(targetIssue, comment.getAuthorApplicationUser(), comment.getBody(), true);
 
 			}
