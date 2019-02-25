@@ -52,6 +52,29 @@ public class IssueInputParametersHelper {
 		
 	}
 	
+	public static IssueInputParameters initTaskInputParameters( final ApplicationUser user, 
+			final Issue sourceIssue , final HttpServletRequest req, final Project project, final IssueType taskIssueType ) {
+		
+		// need to know all the mandatory fields in the ISSUE creation operations for this issue type in the target project
+		IssueService issueService = ComponentAccessor.getIssueService();
+
+		// need to know all the mandatory fields in the ISSUE creation operations for this issue type in the target project
+		IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
+		issueInputParameters.setSummary(req.getParameter("summary"))
+		.setDescription("Issue-Prime - primed by [~" + user.getKey() + "] - " + req.getParameter("description"))
+		.setProjectId(project.getId())
+		.setIssueTypeId(taskIssueType.getId());
+
+		if (sourceIssue != null) {
+			issueInputParameters.setReporterId(sourceIssue.getReporterId());
+			issueInputParameters.setAssigneeId(sourceIssue.getAssigneeId());
+		} else {
+			issueInputParameters.setReporterId(user.getName());
+			issueInputParameters.setAssigneeId(user.getName());
+		}
+		return issueInputParameters;
+	}
+	
 	public static IssueInputParameters initProblemReportInputParameters( final ApplicationUser user, 
 			final Issue sourceIssue , final HttpServletRequest req, final Project project, final IssueType problemReportIssueType) {
 		
@@ -148,9 +171,8 @@ public class IssueInputParametersHelper {
 		return issueInputParameters;
 	}
 
-
 	
-	public static IssueInputParameters setReproducibility( final Issue sourceIssue, IssueInputParameters issueInputParameters ) {
+	private static IssueInputParameters setReproducibility( final Issue sourceIssue, IssueInputParameters issueInputParameters ) {
 
 		// set Reproducibility - customfield_9988
 		try {
@@ -195,7 +217,7 @@ public class IssueInputParametersHelper {
 
 
 	
-	public static IssueInputParameters setSeverity(final Issue sourceIssue, IssueInputParameters issueInputParameters) {
+	private static IssueInputParameters setSeverity(final Issue sourceIssue, IssueInputParameters issueInputParameters) {
 
 		// customfield_9994 - Severity
 
@@ -239,7 +261,7 @@ public class IssueInputParametersHelper {
 	}
 	
 	
-	public static IssueInputParameters setDetectionPhase (final Issue sourceIssue, IssueInputParameters issueInputParameters) {
+	private static IssueInputParameters setDetectionPhase (final Issue sourceIssue, IssueInputParameters issueInputParameters) {
 		
 		try {
 			// customfield_9989
@@ -284,7 +306,7 @@ public class IssueInputParametersHelper {
 	}
 	
 	
-	public static IssueInputParameters setTestReference( IssueInputParameters issueInputParameters) {
+	private static IssueInputParameters setTestReference( IssueInputParameters issueInputParameters) {
 
 		// customfield_11202 - "name": "Test reference",
 		try {   
@@ -348,7 +370,6 @@ public class IssueInputParametersHelper {
 	}
 	
 	
-
 	/**
 	 * ste custom field depending upon its type (Date, Long, Select, etc.)
 	 * @param customFieldId

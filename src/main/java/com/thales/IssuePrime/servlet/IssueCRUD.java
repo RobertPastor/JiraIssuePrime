@@ -30,6 +30,7 @@ import com.atlassian.templaterenderer.RenderingException;
 import com.atlassian.templaterenderer.TemplateRenderer;
 import com.thales.IssuePrime.FieldsConfig.FieldsConfiguration;
 import com.thales.IssuePrime.Helper.AttachmentHelper;
+import com.thales.IssuePrime.Helper.CommentsHelper;
 import com.thales.IssuePrime.Helper.IssueHelper;
 import com.thales.IssuePrime.Helper.IssueLinkHelper;
 import com.thales.IssuePrime.Helper.IssueTypeHelper;
@@ -397,15 +398,26 @@ public class IssueCRUD extends HttpServlet {
 
 							} else {
 
-								MutableIssue issue = issueCreateResult.getIssue();
+								MutableIssue newIssue = issueCreateResult.getIssue();
 
-								if (issue != null ) {
+								if (newIssue != null ) {
+									
+									try {
+										AttachmentHelper.copyAttachments(sourceIssue, newIssue);
+									} catch (Exception ex) {
+										log.error(ex.getLocalizedMessage());
+									}
+									try {
+										IssueLinkHelper.createLink(sourceIssue, newIssue);
+									} catch (Exception ex) {
+										log.error(ex.getLocalizedMessage());
+									}
 
 									String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
 
-									context.put(RESULTS, Collections.singletonList("Issue " + issue.getKey() + " correctly created"));
-									context.put("issueKey", issue.getKey() );
-									context.put("href", baseURL + "/browse/" + issue.getKey() );
+									context.put(RESULTS, Collections.singletonList("Issue " + newIssue.getKey() + " correctly created"));
+									context.put("issueKey", newIssue.getKey() );
+									context.put("href", baseURL + "/browse/" + newIssue.getKey() );
 									templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
 
 								} else {
@@ -414,7 +426,6 @@ public class IssueCRUD extends HttpServlet {
 									templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
 								}
 							}
-
 						}
 					} else {
 						context.put(ERRORS, Collections.singletonList("Source Issue not found "));
@@ -485,20 +496,7 @@ public class IssueCRUD extends HttpServlet {
 					}
 					Issue sourceIssue = IssueHelper.getIssue(issueKey, authenticationContext, issueService);
 
-					// need to know all the mandatory fields in the ISSUE creation operations for this issue type in the target project
-					IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
-					issueInputParameters.setSummary(req.getParameter("summary"))
-					.setDescription("Issue-Prime - primed by [~" + user.getKey() + "] - " + req.getParameter("description"))
-					.setProjectId(project.getId())
-					.setIssueTypeId(taskIssueType.getId());
-
-					if (sourceIssue != null) {
-						issueInputParameters.setReporterId(sourceIssue.getReporterId());
-						issueInputParameters.setAssigneeId(sourceIssue.getAssigneeId());
-					} else {
-						issueInputParameters.setReporterId(user.getName());
-						issueInputParameters.setAssigneeId(user.getName());
-					}
+					IssueInputParameters issueInputParameters = IssueInputParametersHelper.initTaskInputParameters(user, sourceIssue , req, project , taskIssueType);
 
 					IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
 					if (! result.isValid() || result.getErrorCollection().hasAnyErrors()) {
@@ -506,7 +504,6 @@ public class IssueCRUD extends HttpServlet {
 						context.put(ERRORS, result.getErrorCollection().getErrors());
 						resp.setContentType("text/html;charset=utf-8");
 						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-
 
 					} else {
 
@@ -525,7 +522,16 @@ public class IssueCRUD extends HttpServlet {
 							
 							try {
 								AttachmentHelper.copyAttachments(sourceIssue, newIssue);
+							} catch (Exception ex) {
+								log.error(ex.getLocalizedMessage());
+							}
+							try {
 								IssueLinkHelper.createLink(sourceIssue, newIssue);
+							} catch (Exception ex) {
+								log.error(ex.getLocalizedMessage());
+							}
+							try {
+								CommentsHelper.copyComments(sourceIssue, newIssue);
 							} catch (Exception ex) {
 								log.error(ex.getLocalizedMessage());
 							}
