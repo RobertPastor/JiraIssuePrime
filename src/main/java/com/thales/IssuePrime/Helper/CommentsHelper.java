@@ -19,7 +19,7 @@ public class CommentsHelper {
 		
 	}
 	
-	public static void copyComments ( final Issue sourceIssue, final Issue targetIssue) {
+	public static void copyComments ( final Issue sourceIssue, final Issue targetIssue ) {
 
 		CommentManager commentManager = ComponentAccessor.getCommentManager() ;
 

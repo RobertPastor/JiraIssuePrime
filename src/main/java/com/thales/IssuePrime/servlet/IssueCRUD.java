@@ -34,6 +34,7 @@ import com.thales.IssuePrime.Helper.CommentsHelper;
 import com.thales.IssuePrime.Helper.IssueHelper;
 import com.thales.IssuePrime.Helper.IssueLinkHelper;
 import com.thales.IssuePrime.Helper.IssueTypeHelper;
+import com.thales.IssuePrime.Helper.LabelsHelper;
 import com.thales.IssuePrime.Helper.ProjectHelper;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
@@ -405,7 +406,7 @@ public class IssueCRUD extends HttpServlet {
 								if (newIssue != null ) {
 									
 									try {
-										newIssue.setLabels(sourceIssue.getLabels());
+										LabelsHelper.copyLabels(sourceIssue, newIssue);
 									} catch (Exception ex) {
 										log.error(ex.getLocalizedMessage());
 									}
@@ -534,7 +535,7 @@ public class IssueCRUD extends HttpServlet {
 							MutableIssue newIssue = issueResult.getIssue();
 							
 							try {
-								newIssue.setLabels(sourceIssue.getLabels());
+								LabelsHelper.copyLabels(sourceIssue, newIssue);
 							} catch (Exception ex) {
 								log.error(ex.getLocalizedMessage());
 							}
