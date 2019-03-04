@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.atlassian.jira.ComponentManager;
+import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.label.Label;
 import com.atlassian.jira.issue.label.LabelManager;
@@ -17,8 +18,8 @@ public class LabelsHelper {
 	
 	public static void copyLabels ( final Issue sourceIssue, final Issue targetIssue ) {
 		
-		
-		LabelManager labelManager = ComponentManager.getComponentInstanceOfType(LabelManager.class);
+		LabelManager labelManager = ComponentAccessor.getComponent(LabelManager.class);
+		//LabelManager labelManager = ComponentManager.getComponentInstanceOfType(LabelManager.class);
 		Set<Label> labelSet = sourceIssue.getLabels();
 		Iterator<Label> iter = labelSet.iterator();
 		while (iter.hasNext()) {

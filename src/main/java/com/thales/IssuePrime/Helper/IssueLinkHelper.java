@@ -26,7 +26,9 @@ public class IssueLinkHelper {
 	public static void createLink (final Issue sourceIssue, final Issue targetIssue ) {
 
 		IssueLinkManager issueLinkManager = ComponentAccessor.getIssueLinkManager();
-		IssueLinkTypeManager issueLinkTypeManager = (IssueLinkTypeManager)ComponentManager.getComponentInstanceOfType(IssueLinkTypeManager.class);
+		
+		//IssueLinkTypeManager issueLinkTypeManager = (IssueLinkTypeManager)ComponentManager.getComponentInstanceOfType(IssueLinkTypeManager.class);
+		IssueLinkTypeManager issueLinkTypeManager = ComponentAccessor.getComponent(IssueLinkTypeManager.class);
 
 		if (issueLinkManager.isLinkingEnabled()) {
 
@@ -42,16 +44,14 @@ public class IssueLinkHelper {
 					log.debug("issue link type id= " + String.valueOf( issueLinkType.getId() ));
 					log.debug(issueLinkType.getName());
 
-					//if (issueLinkType.isSystemLinkType()) {
 
-						//IssueLink il = issueLinkManager.getIssueLink(sourceIssue.getId(), targetIssue.getId(), linkType.getId());
-						try{
-							issueLinkManager.createIssueLink(sourceIssue.getId(), targetIssue.getId(), issueLinkType.getId(), null, targetIssue.getReporter() );
-						}catch(Exception e){
-							e.printStackTrace();
-						}
+					try{
+						issueLinkManager.createIssueLink(sourceIssue.getId(), targetIssue.getId(), issueLinkType.getId(), null, targetIssue.getReporter() );
+					}catch(Exception e){
+						e.printStackTrace();
+					}
 
-					//}
+
 
 				}
 
