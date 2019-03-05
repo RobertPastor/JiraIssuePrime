@@ -50,6 +50,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.atlassian.jira.bc.issue.IssueService.CreateValidationResult;
+
 @Scanned
 public class IssueCRUD extends HttpServlet {
 
@@ -344,7 +346,7 @@ public class IssueCRUD extends HttpServlet {
 
 		ApplicationUser user = authenticationContext.getLoggedInUser();
 		log.debug("issue key= " + issueKey);
-		
+
 		// context used for the velocity templates
 		Map<String, Object> context = new HashMap<>();
 
@@ -353,108 +355,117 @@ public class IssueCRUD extends HttpServlet {
 			String targetPrimeProjectKey =  Optional.ofNullable(req.getParameter(PROJECT_KEY_REQUEST_PARAMETER)).orElse("");
 			log.debug("target project key = " + targetPrimeProjectKey);
 
-			if (targetPrimeProjectKey.length()>0) {
-
-				Project project = projectService.getProjectByKey(user, targetPrimeProjectKey).getProject();
-
-				log.debug("target project name= " + project.getName());
-
-				// warning it is about a Problem Report
-				IssueType problemReportIssueType = constantsManager.getAllIssueTypeObjects().stream().filter(
-						issueType -> issueType.getName().equalsIgnoreCase(ISSUE_TYPE_PROBLEM_REPORT)).findFirst().orElse(null);
-
-				// identify all fields needed for a Problem Report creation
-				if (problemReportIssueType != null) {
-
-					log.debug("Problem Report issue type id= " + problemReportIssueType.getId() + " - key= " + problemReportIssueType.getName());
-					Issue sourceIssue = IssueHelper.getIssue(issueKey, authenticationContext, issueService);
-
-					if (sourceIssue != null) {
-
-						log.debug("source issue key = " + sourceIssue.getKey());
-
-						IssueInputParameters issueInputParameters = IssueInputParametersHelper.initProblemReportInputParameters(user, sourceIssue , req, project , problemReportIssueType);
-
-						// Sometimes you may need to set a field that is not present on create or update screens. To do so, you need to use following method:
-						issueInputParameters.setSkipScreenCheck(true);
-
-						com.atlassian.jira.bc.issue.IssueService.CreateValidationResult createValidateResult = issueService.validateCreate(user, issueInputParameters);
-						if (!createValidateResult.isValid() || createValidateResult.getErrorCollection().hasAnyErrors()) {
-
-							log.debug("there were errors - during validate create - " + createValidateResult.getErrorCollection().getErrors().toString());
-
-							context.put(ERRORS, createValidateResult.getErrorCollection().getErrors());
-							resp.setContentType("text/html;charset=utf-8");
-							templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-
-						} else {
-
-							// create the issue
-							IssueResult issueCreateResult = issueService.create(user, createValidateResult);
-							if (!issueCreateResult.isValid() || issueCreateResult.getErrorCollection().hasAnyErrors()) {
-
-								log.debug("there were errors - during create - " + issueCreateResult.getErrorCollection().getErrors().toString());
-
-								context.put(ERRORS, issueCreateResult.getErrorCollection().getErrors());
-								resp.setContentType("text/html;charset=utf-8");
-								templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-
-							} else {
-
-								MutableIssue newIssue = issueCreateResult.getIssue();
-
-								if (newIssue != null ) {
-									
-									try {
-										LabelsHelper.copyLabels(sourceIssue, newIssue);
-									} catch (Exception ex) {
-										log.error(ex.getLocalizedMessage());
-									}
-									try {
-										AttachmentHelper.copyAttachments(sourceIssue, newIssue);
-									} catch (Exception ex) {
-										log.error(ex.getLocalizedMessage());
-									}
-									try {
-										IssueLinkHelper.createLink(sourceIssue, newIssue);
-									} catch (Exception ex) {
-										log.error(ex.getLocalizedMessage());
-									}
-									try {
-										CommentsHelper.copyComments(sourceIssue, newIssue);
-									} catch (Exception ex) {
-										log.error(ex.getLocalizedMessage());
-									}
-
-									String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
-
-									context.put(RESULTS, Collections.singletonList("Issue " + newIssue.getKey() + " correctly created"));
-									context.put("issueKey", newIssue.getKey() );
-									context.put("href", baseURL + "/browse/" + newIssue.getKey() );
-									templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
-
-								} else {
-
-									context.put(ERRORS, Collections.singletonList("target issue not created "));
-									templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-								}
-							}
-						}
-					} else {
-						context.put(ERRORS, Collections.singletonList("Source Issue not found "));
-						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-
-					}
-				} else {
-
-					context.put(ERRORS, Collections.singletonList("Problem Report Issue type not found "));
-					templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-				}
-			} else {
+			if (targetPrimeProjectKey.length() == 0) {
 
 				context.put(ERRORS, Collections.singletonList("Target Project Key = " + targetPrimeProjectKey + " is not defined"));
 				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				return;
 			}
+
+			Project project = projectService.getProjectByKey(user, targetPrimeProjectKey).getProject();
+			log.debug("target project name= " + project.getName());
+
+			// warning it is about a Problem Report
+			IssueType problemReportIssueType = constantsManager.getAllIssueTypeObjects().stream().filter(
+					issueType -> issueType.getName().equalsIgnoreCase(ISSUE_TYPE_PROBLEM_REPORT)).findFirst().orElse(null);
+
+			// identify all fields needed for a Problem Report creation
+			if (problemReportIssueType == null) {
+
+				context.put(ERRORS, Collections.singletonList("Problem Report Issue type not found "));
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				return;
+			}
+
+			log.debug("Problem Report issue type id= " + problemReportIssueType.getId() + " - key= " + problemReportIssueType.getName());
+			Issue sourceIssue = IssueHelper.getIssue(issueKey, authenticationContext, issueService);
+
+			if (sourceIssue == null) {
+
+				context.put(ERRORS, Collections.singletonList("Source Issue not found "));
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				return;
+
+			}
+
+			log.debug("source issue key = " + sourceIssue.getKey());
+
+			IssueInputParameters issueInputParameters = IssueInputParametersHelper.initProblemReportInputParameters(user, sourceIssue , req, project , problemReportIssueType);
+
+			// Sometimes you may need to set a field that is not present on create or update screens. To do so, you need to use following method:
+			issueInputParameters.setSkipScreenCheck(true);
+
+			CreateValidationResult createValidateResult = issueService.validateCreate(user, issueInputParameters);
+			if (!createValidateResult.isValid() || createValidateResult.getErrorCollection().hasAnyErrors()) {
+
+				log.debug("there were errors - during validate create - " + createValidateResult.getErrorCollection().getErrors().toString());
+
+				context.put(ERRORS, createValidateResult.getErrorCollection().getErrors());
+				resp.setContentType("text/html;charset=utf-8");
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+			} else {
+
+				// create the issue
+				IssueResult issueCreateResult = issueService.create(user, createValidateResult);
+				if (!issueCreateResult.isValid() || issueCreateResult.getErrorCollection().hasAnyErrors()) {
+
+					log.debug("there were errors - during create - " + issueCreateResult.getErrorCollection().getErrors().toString());
+
+					context.put(ERRORS, issueCreateResult.getErrorCollection().getErrors());
+					resp.setContentType("text/html;charset=utf-8");
+					templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+
+				} else {
+
+					MutableIssue newIssue = issueCreateResult.getIssue();
+
+					if (newIssue != null ) {
+
+						try {
+							if ( sourceIssue.getDueDate() != null) {
+								newIssue.setDueDate(sourceIssue.getDueDate());
+							}
+						} catch (Exception ex) {
+							log.error(ex.getLocalizedMessage());
+						}
+
+						try {
+							LabelsHelper.copyLabels(sourceIssue, newIssue);
+						} catch (Exception ex) {
+							log.error(ex.getLocalizedMessage());
+						}
+						try {
+							AttachmentHelper.copyAttachments(sourceIssue, newIssue);
+						} catch (Exception ex) {
+							log.error(ex.getLocalizedMessage());
+						}
+						try {
+							IssueLinkHelper.createLink(sourceIssue, newIssue);
+						} catch (Exception ex) {
+							log.error(ex.getLocalizedMessage());
+						}
+						try {
+							CommentsHelper.copyComments(sourceIssue, newIssue);
+						} catch (Exception ex) {
+							log.error(ex.getLocalizedMessage());
+						}
+
+						String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
+
+						context.put(RESULTS, Collections.singletonList("Issue " + newIssue.getKey() + " correctly created"));
+						context.put("issueKey", newIssue.getKey() );
+						context.put("href", baseURL + "/browse/" + newIssue.getKey() );
+						templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
+
+					} else {
+
+						context.put(ERRORS, Collections.singletonList("target issue not created "));
+						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+					}
+				}
+			}
+
 
 		} catch ( Exception ex) {
 
@@ -484,89 +495,99 @@ public class IssueCRUD extends HttpServlet {
 			if (project == null) {
 				context.put(ERRORS, Collections.singletonList("Try to prime into Project with key " + targetPrimeProjectKey + " but project with this KEY doesn't exist"));
 				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				return;
 
-			} else {
+			} 
 
-				// warning the type name is task in English or tâche in French
-				IssueType taskIssueTypeFrench = constantsManager.getAllIssueTypeObjects().stream().filter(
-						issueType -> issueType.getName().equalsIgnoreCase(ISSUE_TYPE_TACHE)).findFirst().orElse(null);
+			// warning the type name is task in English or tâche in French
+			IssueType taskIssueTypeFrench = constantsManager.getAllIssueTypeObjects().stream().filter(
+					issueType -> issueType.getName().equalsIgnoreCase(ISSUE_TYPE_TACHE)).findFirst().orElse(null);
 
-				IssueType taskIssueTypeEnglish = constantsManager.getAllIssueTypeObjects().stream().filter(
-						issueType -> issueType.getName().equalsIgnoreCase(ISSUE_TYPE_TASK)).findFirst().orElse(null);
+			IssueType taskIssueTypeEnglish = constantsManager.getAllIssueTypeObjects().stream().filter(
+					issueType -> issueType.getName().equalsIgnoreCase(ISSUE_TYPE_TASK)).findFirst().orElse(null);
 
-				if ( (taskIssueTypeFrench == null) && (taskIssueTypeEnglish == null) ) {
+			if ( (taskIssueTypeFrench == null) && (taskIssueTypeEnglish == null) ) {
 
-					context.put(ERRORS, Collections.singletonList("Can't find Task issue type or Tâche issue type -> will try to create only these issue types"));
-					templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				context.put(ERRORS, Collections.singletonList("Can't find Task issue type or Tâche issue type -> will try to create only these issue types"));
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				return;
 
-				} else {
+			} 
 
-					IssueType taskIssueType = null; 
-					if (taskIssueTypeFrench != null) {
-						taskIssueType = taskIssueTypeFrench;
-					}
-					if (taskIssueTypeEnglish != null) {
-						taskIssueType = taskIssueTypeEnglish;
-					}
-					Issue sourceIssue = IssueHelper.getIssue(issueKey, authenticationContext, issueService);
-
-					IssueInputParameters issueInputParameters = IssueInputParametersHelper.initTaskInputParameters(user, sourceIssue , req, project , taskIssueType);
-
-					IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
-					if (! result.isValid() || result.getErrorCollection().hasAnyErrors()) {
-
-						context.put(ERRORS, result.getErrorCollection().getErrors());
-						resp.setContentType("text/html;charset=utf-8");
-						templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-
-					} else {
-
-						IssueResult issueResult = issueService.create(user, result);
-						if (! issueResult.isValid() || issueResult.getErrorCollection().hasAnyErrors()) {
-
-							log.debug("there were errors - during create - " + issueResult.getErrorCollection().getErrors().toString());
-
-							context.put(ERRORS, issueResult.getErrorCollection().getErrors());
-							resp.setContentType("text/html;charset=utf-8");
-							templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
-
-						} else {
-							// the newly created issue
-							MutableIssue newIssue = issueResult.getIssue();
-							
-							try {
-								LabelsHelper.copyLabels(sourceIssue, newIssue);
-							} catch (Exception ex) {
-								log.error(ex.getLocalizedMessage());
-							}
-							
-							try {
-								AttachmentHelper.copyAttachments(sourceIssue, newIssue);
-							} catch (Exception ex) {
-								log.error(ex.getLocalizedMessage());
-							}
-							try {
-								IssueLinkHelper.createLink(sourceIssue, newIssue);
-							} catch (Exception ex) {
-								log.error(ex.getLocalizedMessage());
-							}
-							try {
-								CommentsHelper.copyComments(sourceIssue, newIssue);
-							} catch (Exception ex) {
-								log.error(ex.getLocalizedMessage());
-							}
-							
-							String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
-
-							context.put(RESULTS, Collections.singletonList("Issue " + newIssue.getKey() + " correctly created"));
-							context.put("issueKey", newIssue.getKey() );
-							context.put("href", baseURL + "/browse/" + newIssue.getKey() );
-							templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
-						}
-					}
-				}
-
+			IssueType taskIssueType = null; 
+			if (taskIssueTypeFrench != null) {
+				taskIssueType = taskIssueTypeFrench;
 			}
+			if (taskIssueTypeEnglish != null) {
+				taskIssueType = taskIssueTypeEnglish;
+			}
+
+			Issue sourceIssue = IssueHelper.getIssue(issueKey, authenticationContext, issueService);
+
+			IssueInputParameters issueInputParameters = IssueInputParametersHelper.initTaskInputParameters(user, sourceIssue , req, project , taskIssueType);
+
+			IssueService.CreateValidationResult result = issueService.validateCreate(user, issueInputParameters);
+			if (! result.isValid() || result.getErrorCollection().hasAnyErrors()) {
+
+				context.put(ERRORS, result.getErrorCollection().getErrors());
+				resp.setContentType("text/html;charset=utf-8");
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				return;
+
+			} 
+
+			IssueResult issueResult = issueService.create(user, result);
+			if (! issueResult.isValid() || issueResult.getErrorCollection().hasAnyErrors()) {
+
+				log.debug("there were errors - during create - " + issueResult.getErrorCollection().getErrors().toString());
+
+				context.put(ERRORS, issueResult.getErrorCollection().getErrors());
+				resp.setContentType("text/html;charset=utf-8");
+				templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
+				return;
+
+			} 
+			// the newly created issue
+			MutableIssue newIssue = issueResult.getIssue();
+
+			try {
+				if ( sourceIssue.getDueDate() != null) {
+					newIssue.setDueDate(sourceIssue.getDueDate());
+				}
+			} catch (Exception ex) {
+				log.error(ex.getLocalizedMessage());
+			}
+
+			try {
+				LabelsHelper.copyLabels(sourceIssue, newIssue);
+			} catch (Exception ex) {
+				log.error(ex.getLocalizedMessage());
+			}
+
+			try {
+				AttachmentHelper.copyAttachments(sourceIssue, newIssue);
+			} catch (Exception ex) {
+				log.error(ex.getLocalizedMessage());
+			}
+			try {
+				IssueLinkHelper.createLink(sourceIssue, newIssue);
+			} catch (Exception ex) {
+				log.error(ex.getLocalizedMessage());
+			}
+			try {
+				CommentsHelper.copyComments(sourceIssue, newIssue);
+			} catch (Exception ex) {
+				log.error(ex.getLocalizedMessage());
+			}
+
+			String baseURL = ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL);
+
+			context.put(RESULTS, Collections.singletonList("Issue " + newIssue.getKey() + " correctly created"));
+			context.put("issueKey", newIssue.getKey() );
+			context.put("href", baseURL + "/browse/" + newIssue.getKey() );
+			templateRenderer.render(CREATED_ISSUES_TEMPLATE, context, resp.getWriter());
+
+
 
 		} catch (Exception ex) {
 
