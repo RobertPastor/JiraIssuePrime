@@ -91,7 +91,8 @@ public class IssueCRUD extends HttpServlet {
 	private static final String CREATED_ISSUES_TEMPLATE = "/templates/issueCrud/created.vm";
 
 
-	public IssueCRUD(IssueService issueService, ProjectService projectService,
+	public IssueCRUD(IssueService issueService, 
+			ProjectService projectService,
 			SearchService searchService,
 			TemplateRenderer templateRenderer,
 			JiraAuthenticationContext authenticationContext,
@@ -208,7 +209,7 @@ public class IssueCRUD extends HttpServlet {
 
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
 		Map<String, Object> context = new HashMap<>();
 		try {
@@ -217,7 +218,9 @@ public class IssueCRUD extends HttpServlet {
 			String issueType = Optional.ofNullable(req.getParameter(ISSUE_TYPE_REQUEST_PARAMETER)).orElse("");
 			String issueKey = Optional.ofNullable(req.getParameter(ISSUE_KEY_REQUEST_PARAMETER)).orElse("");
 
-			log.debug("Issue type is= " + issueType);
+			log.debug("Action type is= {}" , actionType);
+			log.debug("Issue type is= {}" , issueType);
+			log.debug("Issue Key is= {}" , issueKey);
 
 			if ((actionType.length()==0) || (issueType.length()==0) || (issueKey.length()==0)) {
 
@@ -228,15 +231,19 @@ public class IssueCRUD extends HttpServlet {
 			} else {
 
 				ApplicationUser user = authenticationContext.getLoggedInUser();
+				log.debug("logged in user= {}" , user.getKey());
+				
 				IssueResult issueResult = issueService.getIssue(user, issueKey);
+				if (!issueResult.isValid() || issueResult.getErrorCollection().hasAnyErrors()) {
 
-				if (issueResult.getErrorCollection().hasAnyErrors()) {
-
+					log.debug("issue result is not valid");
 					context.put(ERRORS, issueResult.getErrorCollection().getErrors());
 					resp.setContentType("text/html;charset=utf-8");
 					templateRenderer.render(LIST_ISSUES_TEMPLATE, context, resp.getWriter());
 
 				} else {
+
+					log.debug("issue result is valid");
 
 					Issue issue = issueResult.getIssue();
 					if (issue == null) {
